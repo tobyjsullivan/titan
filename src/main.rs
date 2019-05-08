@@ -51,13 +51,15 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_ctx.event_pump()?;
 
     let mut scale = 1.0;
-
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
+                Event::MouseButtonDown { x, y, .. } => {
+                    register_mouse_down(x, y, scale);
+                }
                 Event::MouseWheel { y, .. } => {
                     scale += (y as f32) / 10.0;
                     if scale < 0.10 {
@@ -109,4 +111,8 @@ fn transform(x: i32, y: i32) -> Point {
     let out_y = (x + y) as f32 * ISO_ANGLE_RADS.sin();
 
     Point { x: out_x as i32, y: out_y as i32 }
+}
+
+fn register_mouse_down(x: i32, y: i32, scale: f32) {
+    // TODO
 }
