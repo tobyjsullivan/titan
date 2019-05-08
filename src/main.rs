@@ -39,7 +39,7 @@ fn main() -> Result<(), String> {
     let sdl_ctx =sdl2::init()?;
     let vid_subsystem = sdl_ctx.video()?;
 
-    let window =vid_subsystem.window("Business Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
+    let window =vid_subsystem.window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .opengl()
         .build()
