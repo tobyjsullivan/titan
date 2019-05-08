@@ -7,12 +7,12 @@ use sdl2::rect;
 use std::f32::consts::PI;
 use std::time::Duration;
 
-const WINDOW_WIDTH: u32 = 640;
-const WINDOW_HEIGHT: u32 = 480;
+const WINDOW_WIDTH: u32 = 800;
+const WINDOW_HEIGHT: u32 = 600;
 const WINDOW_PADDING: u32 = 20;
 
 const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
-const ISO_GRID_SIZE: u32 = 20;
+const ISO_GRID_SIZE: u32 = 100;
 
 struct Point {
     x: i32,
@@ -59,8 +59,8 @@ fn main() -> Result<(), String> {
                 },
                 Event::MouseWheel { y, .. } => {
                     scale += (y as f32) / 10.0;
-                    if scale < 1.0 {
-                        scale = 1.0
+                    if scale < 0.10 {
+                        scale = 0.10
                     }
 
                     if scale > 10.0 {
@@ -72,21 +72,25 @@ fn main() -> Result<(), String> {
         }
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
 
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
+        canvas.set_draw_color(Color::RGB(53, 117, 189));
         canvas.clear();
 
-        canvas.set_draw_color(Color::RGB(255, 0, 0));
+        canvas.set_draw_color(Color::RGB(0, 0, 0));
 
-        for i in -10..11 {
-            let start = transform(-100, 10 * i);
-            let end = transform(100, 10 * i);
+        for i in 0..(ISO_GRID_SIZE as i32 + 1) {
+            let offset = i - (ISO_GRID_SIZE as i32 / 2);
+
+            let start = transform(-5 * (ISO_GRID_SIZE as i32), 10 * offset);
+            let end = transform(5 * (ISO_GRID_SIZE as i32), 10 * offset);
 
             canvas.draw_line(start.to_render(scale), end.to_render(scale));
         }
 
-        for i in -10..11 {
-            let start = transform(10 * i, -100);
-            let end = transform(10 * i, 100);
+        for i in 0..(ISO_GRID_SIZE as i32 + 1) {
+            let offset = i - (ISO_GRID_SIZE as i32 / 2);
+
+            let start = transform(10 * offset, -5 * (ISO_GRID_SIZE as i32));
+            let end = transform(10 * offset, 5 * (ISO_GRID_SIZE as i32));
 
             canvas.draw_line(start.to_render(scale), end.to_render(scale));
         }
