@@ -5,7 +5,8 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect;
 use std::f32::consts::PI;
-use std::time::Duration;
+use std::ops::Sub;
+use std::time::{Duration, Instant};
 
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
@@ -72,6 +73,7 @@ fn main() -> Result<(), String> {
         }
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
 
+        let draw_begin = Instant::now();
         canvas.set_draw_color(Color::RGB(53, 117, 189));
         canvas.clear();
 
@@ -96,6 +98,7 @@ fn main() -> Result<(), String> {
         }
 
         canvas.present();
+        let draw_time = draw_begin.elapsed();
     }
 
     Ok(())
