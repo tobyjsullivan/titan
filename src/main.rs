@@ -1,17 +1,39 @@
 extern crate sdl2;
 
-use std::f32;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::rect::Point;
+use sdl2::rect;
+use std::f32::consts::PI;
 use std::time::Duration;
 
 const WINDOW_WIDTH: u32 = 640;
 const WINDOW_HEIGHT: u32 = 480;
 const WINDOW_PADDING: u32 = 20;
 
-const ISO_PITCH: f32 = (20.0 / 180.0) * f32::consts::PI; // Converted to rads
+const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
+const ISO_GRID_SIZE: u32 = 20;
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Point {
+    fn transform(&self, x: i32, y: i32) -> Self {
+        Self {
+            x: self.x + x,
+            y: self.y + y,
+        }
+    }
+
+    fn to_render(&self) -> rect::Point {
+        let h_center = WINDOW_WIDTH as i32 / 2;
+        let v_center = WINDOW_HEIGHT as i32 / 2;
+
+        rect::Point::new(h_center + self.x, v_center + self.y)
+    }
+}
 
 fn main() -> Result<(), String> {
     let sdl_ctx =sdl2::init()?;
@@ -27,33 +49,23 @@ fn main() -> Result<(), String> {
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
+
     canvas.set_draw_color(Color::RGB(255, 0, 0));
 
-    let h_center = WINDOW_WIDTH / 2;
-    // Draw the bottom edge of the grid
-    // The edge starts at (h_center, WINDOW_HEIGHT - WINDOW_PADDING)
-    let origin = Point::new(h_center as i32, (WINDOW_HEIGHT - WINDOW_PADDING) as i32);
-    // I want to fill the screen horizontally so the edge should end at
-    let end_x = WINDOW_WIDTH - WINDOW_PADDING;
-    let run = end_x - h_center;
-    println!("Run: {}", run);
-    println!("Tan: {}", ISO_PITCH.tan());
-    let rise = (run as f32 * ISO_PITCH.tan()).abs();
-    println!("Rise: {}", rise);
-    let end_y = WINDOW_HEIGHT - (WINDOW_PADDING + rise as u32);
-    let end = Point::new(end_x as i32, end_y as i32);
+    for i in -10..11 {
+        let start = transform(-100, 10 * i);
+        let end = transform(100, 10 * i);
 
+        canvas.draw_line(start.to_render(), end.to_render());
+    }
 
+    for i in -10..11 {
+        let start = transform(10 * i, -100);
+        let end = transform(10 * i, 100);
 
-    // let v_center = WINDOW_HEIGHT as i32 / 2;
-    // let p_left = Point::new(20, v_center);
-    // let p_top = Point::new(h_center, 20);
-    // let p_right = Point::new(WINDOW_WIDTH as i32 - 20, v_center);
-    // let p_bottom = Point::new(h_center, WINDOW_HEIGHT as i32 - 20);
-    // let lines = [p_left, p_top, p_right, p_bottom, p_left];
+        canvas.draw_line(start.to_render(), end.to_render());
+    }
 
-    let lines = [origin, end];
-    canvas.draw_lines(&lines[..]);
     canvas.present();
 
     let mut event_pump = sdl_ctx.event_pump()?;
@@ -72,4 +84,11 @@ fn main() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+fn transform(x: i32, y: i32) -> Point {
+    let out_x = (x - y) as f32 * ISO_ANGLE_RADS.cos();
+    let out_y = (x + y) as f32 * ISO_ANGLE_RADS.sin();
+
+    Point { x: out_x as i32, y: out_y as i32 }
 }
