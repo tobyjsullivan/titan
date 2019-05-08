@@ -27,19 +27,19 @@ impl Point {
         }
     }
 
-    fn to_render(&self) -> rect::Point {
+    fn to_render(&self, scale: f32) -> rect::Point {
         let h_center = WINDOW_WIDTH as i32 / 2;
         let v_center = WINDOW_HEIGHT as i32 / 2;
 
-        rect::Point::new(h_center + self.x, v_center + self.y)
+        rect::Point::new(h_center + (self.x as f32 * scale) as i32, v_center + (self.y as f32 * scale) as i32)
     }
 }
 
 fn main() -> Result<(), String> {
-    let sdl_ctx =sdl2::init()?;
+    let sdl_ctx = sdl2::init()?;
     let vid_subsystem = sdl_ctx.video()?;
 
-    let window =vid_subsystem.window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
+    let window = vid_subsystem.window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .opengl()
         .build()
@@ -47,28 +47,9 @@ fn main() -> Result<(), String> {
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
 
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.clear();
-
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
-
-    for i in -10..11 {
-        let start = transform(-100, 10 * i);
-        let end = transform(100, 10 * i);
-
-        canvas.draw_line(start.to_render(), end.to_render());
-    }
-
-    for i in -10..11 {
-        let start = transform(10 * i, -100);
-        let end = transform(10 * i, 100);
-
-        canvas.draw_line(start.to_render(), end.to_render());
-    }
-
-    canvas.present();
-
     let mut event_pump = sdl_ctx.event_pump()?;
+
+    let mut scale = 1.0;
 
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -76,11 +57,41 @@ fn main() -> Result<(), String> {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
+                Event::MouseWheel { y, .. } => {
+                    scale += (y as f32) / 10.0;
+                    if scale < 1.0 {
+                        scale = 1.0
+                    }
+
+                    if scale > 10.0 {
+                        scale = 10.0
+                    }
+                },
                 _ => {}
             }
         }
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-        // The rest of the game loop goes here...
+
+        canvas.set_draw_color(Color::RGB(0, 0, 0));
+        canvas.clear();
+
+        canvas.set_draw_color(Color::RGB(255, 0, 0));
+
+        for i in -10..11 {
+            let start = transform(-100, 10 * i);
+            let end = transform(100, 10 * i);
+
+            canvas.draw_line(start.to_render(scale), end.to_render(scale));
+        }
+
+        for i in -10..11 {
+            let start = transform(10 * i, -100);
+            let end = transform(10 * i, 100);
+
+            canvas.draw_line(start.to_render(scale), end.to_render(scale));
+        }
+
+        canvas.present();
     }
 
     Ok(())
