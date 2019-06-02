@@ -3,6 +3,7 @@ extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::image::LoadTexture;
 use sdl2::rect;
 use std::f32::consts::PI;
 use std::ops::Sub;
@@ -107,9 +108,12 @@ fn main() -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
+    let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_ctx.event_pump()?;
     let mut lines = Vec::<WorldPoint>::new();
+
+    let mut tx = texture_creator.load_texture("art/test_sprite.png")?;
 
     let mut scale = 1.0;
     'running: loop {
@@ -169,6 +173,8 @@ fn main() -> Result<(), String> {
         }
         // println!("{:?}", draw_lines);
         canvas.draw_lines(draw_lines.as_slice());
+
+        canvas.copy(&tx, None, Some(rect::Rect::new(100, 100, 275, 100)));
 
         canvas.present();
         let draw_time = draw_begin.elapsed();
