@@ -113,7 +113,7 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_ctx.event_pump()?;
     let mut lines = Vec::<WorldPoint>::new();
 
-    let mut tx = texture_creator.load_texture("art/test_sprite.png")?;
+    let tx = texture_creator.load_texture("art/test_sprite.png")?;
 
     let mut scale = 1.0;
     'running: loop {
@@ -155,7 +155,7 @@ fn main() -> Result<(), String> {
             let start = WorldPoint { x: (-5 * ISO_GRID_SIZE as i32) as f32, y: (10 * offset) as f32 };
             let end = WorldPoint { x: (5 * ISO_GRID_SIZE as i32) as f32, y: (10 * offset) as f32 };
 
-            canvas.draw_line(ScreenPoint::from(&start).to_render(), ScreenPoint::from(&end).to_render());
+            canvas.draw_line(ScreenPoint::from(&start).to_render(), ScreenPoint::from(&end).to_render())?;
         }
 
         for i in 0..(ISO_GRID_SIZE as i32 + 1) {
@@ -164,7 +164,7 @@ fn main() -> Result<(), String> {
             let start = WorldPoint { x: (10 * offset) as f32, y: (-5 * ISO_GRID_SIZE as i32) as f32 };
             let end = WorldPoint { x: (10 * offset) as f32, y: (5 * ISO_GRID_SIZE as i32) as f32 };
 
-            canvas.draw_line(ScreenPoint::from(&start).to_render(), ScreenPoint::from(&end).to_render());
+            canvas.draw_line(ScreenPoint::from(&start).to_render(), ScreenPoint::from(&end).to_render())?;
         }
 
         let mut draw_lines = Vec::new();
@@ -172,9 +172,9 @@ fn main() -> Result<(), String> {
             draw_lines.push(ScreenPoint::from(world_point).to_render());
         }
         // println!("{:?}", draw_lines);
-        canvas.draw_lines(draw_lines.as_slice());
+        canvas.draw_lines(draw_lines.as_slice())?;
 
-        canvas.copy(&tx, None, Some(rect::Rect::new(100, 100, 275, 100)));
+        canvas.copy(&tx, None, Some(rect::Rect::new(100, 100, 275, 100)))?;
 
         canvas.present();
         let draw_time = draw_begin.elapsed();
