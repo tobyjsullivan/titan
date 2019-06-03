@@ -18,6 +18,8 @@ const WINDOW_PADDING: u32 = 20;
 const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
 const ISO_GRID_SIZE: u32 = 100;
 
+const GRID_SCALE: f32 = 10.0;
+
 struct ScreenPoint {
     x: i32,
     y: i32,
@@ -28,14 +30,18 @@ impl ScreenPoint {
         rect::Point::new(self.x, self.y)
     }
 
-    ///  _               _
-    /// |                 |
-    /// | cos Θ   -cos Θ  |
-    /// |                 |
-    /// | sin Θ    sin Θ  |
-    /// |_               _|
+    ///  _                _
+    /// |                  |
+    /// |  cos Θ   -cos Θ  |
+    /// |                  |
+    /// |  sin Θ    sin Θ  |
+    /// |_                _|
     ///
     fn transform(x: f32, y: f32) -> (f32, f32) {
+        // TODO (toby): Scale these properly.
+        let x = x * GRID_SCALE;
+        let y = y * GRID_SCALE;
+
         let out_x = (x - y) * ISO_ANGLE_RADS.cos();
         let out_y = (x + y) * ISO_ANGLE_RADS.sin();
 
@@ -59,6 +65,11 @@ impl From<&WorldPoint> for ScreenPoint {
     }
 }
 
+/// Represents a point on the game world surface.
+/// The surface is a continuous plane, hence the use of floating points for locations.
+/// Within this surface, however, is a unit grid system.
+/// The units correspond to integer values, for example (1.0, 3.0).
+/// Most world objects fill NxM units, for some integers N and M, and are positioned directly on grid edges.
 struct WorldPoint {
     x: f32,
     y: f32,
@@ -76,7 +87,8 @@ impl WorldPoint {
         let out_x = x / (2.0 * ISO_ANGLE_RADS.cos()) + y / (2.0 * ISO_ANGLE_RADS.sin());
         let out_y = -x / (2.0 * ISO_ANGLE_RADS.cos()) + y / (2.0 * ISO_ANGLE_RADS.sin());
 
-        (out_x, out_y)
+        // TODO (toby): Scale these properly.
+        (out_x / GRID_SCALE, out_y / GRID_SCALE)
     }
 }
 
@@ -196,15 +208,13 @@ fn main() -> Result<(), String> {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
 
         for i in 0..(ISO_GRID_SIZE as i32 + 1) {
-            let offset = i - (ISO_GRID_SIZE as i32 / 2);
-
             let start = WorldPoint {
-                x: (-5 * ISO_GRID_SIZE as i32) as f32,
-                y: (10 * offset) as f32,
+                x: 0.0,
+                y: i as f32,
             };
             let end = WorldPoint {
-                x: (5 * ISO_GRID_SIZE as i32) as f32,
-                y: (10 * offset) as f32,
+                x: ISO_GRID_SIZE as f32,
+                y: i as f32,
             };
 
             canvas.draw_line(
@@ -214,15 +224,13 @@ fn main() -> Result<(), String> {
         }
 
         for i in 0..(ISO_GRID_SIZE as i32 + 1) {
-            let offset = i - (ISO_GRID_SIZE as i32 / 2);
-
             let start = WorldPoint {
-                x: (10 * offset) as f32,
-                y: (-5 * ISO_GRID_SIZE as i32) as f32,
+                x: i as f32,
+                y: 0.0,
             };
             let end = WorldPoint {
-                x: (10 * offset) as f32,
-                y: (5 * ISO_GRID_SIZE as i32) as f32,
+                x: i as f32,
+                y: ISO_GRID_SIZE as f32,
             };
 
             canvas.draw_line(
