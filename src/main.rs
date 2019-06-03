@@ -4,6 +4,8 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::image::LoadTexture;
+use sdl2::render::{Canvas, Texture};
+use sdl2::video::Window;
 use sdl2::rect;
 use std::f32::consts::PI;
 use std::ops::Sub;
@@ -97,6 +99,31 @@ impl From<&ScreenPoint> for WorldPoint {
     }
 }
 
+fn draw_iso_sprite(canvas: &mut Canvas<Window>, texture: &Texture, origin: WorldPoint) -> Result<(), String> {
+    // Translate the origin point to a screen point.
+    let screen = ScreenPoint::from(&origin);
+
+    let scale = 0.1;
+
+    // Find the appropriate offset of the top-left of the sprite.
+    let q = texture.query();
+    let scaled_w = q.width as f32 * scale;
+    let scaled_h = q.height as f32 * scale;
+
+    // println!("Texture: w: {}; h: {}", q.width, q.height);
+    // Anchor is center-bottom of texture.
+    let anchor_x = scaled_w / 2.0;
+    let anchor_y = scaled_h;
+    let screen_offset_x = screen.x - anchor_x as i32;
+    let screen_offset_y = screen.y - anchor_y as i32;
+    // println!("Offset X: {}; Y: {}", screen_offset_x, screen_offset_y);
+
+    // Draw the sprite.
+    canvas.copy(&texture, None, Some(rect::Rect::new(screen_offset_x, screen_offset_y, scaled_w as u32, scaled_h as u32)))?;
+
+    Ok(())
+}
+
 fn main() -> Result<(), String> {
     let sdl_ctx = sdl2::init()?;
     let vid_subsystem = sdl_ctx.video()?;
@@ -123,8 +150,11 @@ fn main() -> Result<(), String> {
                     break 'running
                 },
                 Event::MouseButtonDown { x, y, .. } => {
+                    println!("Click!");
                     let screen_point = &ScreenPoint { x, y };
+                    println!("Screen: ({}, {})", screen_point.x, screen_point.y);
                     let world_point: WorldPoint = screen_point.into();
+                    println!("World: ({}, {})", world_point.x, world_point.y);
                     lines.push(world_point);
                 }
                 Event::MouseWheel { y, .. } => {
@@ -174,7 +204,7 @@ fn main() -> Result<(), String> {
         // println!("{:?}", draw_lines);
         canvas.draw_lines(draw_lines.as_slice())?;
 
-        canvas.copy(&tx, None, Some(rect::Rect::new(100, 100, 275, 100)))?;
+        draw_iso_sprite(&mut canvas, &tx, WorldPoint { x: 5.0, y: 5.0 })?;
 
         canvas.present();
         let draw_time = draw_begin.elapsed();
