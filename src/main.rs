@@ -1,12 +1,12 @@
 extern crate sdl2;
 
-use sdl2::pixels::Color;
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use sdl2::image::LoadTexture;
+use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use sdl2::rect;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;
-use sdl2::rect;
 use std::f32::consts::PI;
 use std::ops::Sub;
 use std::time::{Duration, Instant};
@@ -99,7 +99,11 @@ impl From<&ScreenPoint> for WorldPoint {
     }
 }
 
-fn draw_iso_sprite(canvas: &mut Canvas<Window>, texture: &Texture, origin: WorldPoint) -> Result<(), String> {
+fn draw_iso_sprite(
+    canvas: &mut Canvas<Window>,
+    texture: &Texture,
+    origin: WorldPoint,
+) -> Result<(), String> {
     // Translate the origin point to a screen point.
     let screen = ScreenPoint::from(&origin);
 
@@ -119,7 +123,16 @@ fn draw_iso_sprite(canvas: &mut Canvas<Window>, texture: &Texture, origin: World
     // println!("Offset X: {}; Y: {}", screen_offset_x, screen_offset_y);
 
     // Draw the sprite.
-    canvas.copy(&texture, None, Some(rect::Rect::new(screen_offset_x, screen_offset_y, scaled_w as u32, scaled_h as u32)))?;
+    canvas.copy(
+        &texture,
+        None,
+        Some(rect::Rect::new(
+            screen_offset_x,
+            screen_offset_y,
+            scaled_w as u32,
+            scaled_h as u32,
+        )),
+    )?;
 
     Ok(())
 }
@@ -128,7 +141,8 @@ fn main() -> Result<(), String> {
     let sdl_ctx = sdl2::init()?;
     let vid_subsystem = sdl_ctx.video()?;
 
-    let window = vid_subsystem.window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
+    let window = vid_subsystem
+        .window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .opengl()
         .build()
@@ -146,9 +160,11 @@ fn main() -> Result<(), String> {
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
                 Event::MouseButtonDown { x, y, .. } => {
                     println!("Click!");
                     let screen_point = &ScreenPoint { x, y };
@@ -167,7 +183,7 @@ fn main() -> Result<(), String> {
                     // if scale > 10.0 {
                     //     scale = 10.0
                     // }
-                },
+                }
                 _ => {}
             }
         }
@@ -182,19 +198,37 @@ fn main() -> Result<(), String> {
         for i in 0..(ISO_GRID_SIZE as i32 + 1) {
             let offset = i - (ISO_GRID_SIZE as i32 / 2);
 
-            let start = WorldPoint { x: (-5 * ISO_GRID_SIZE as i32) as f32, y: (10 * offset) as f32 };
-            let end = WorldPoint { x: (5 * ISO_GRID_SIZE as i32) as f32, y: (10 * offset) as f32 };
+            let start = WorldPoint {
+                x: (-5 * ISO_GRID_SIZE as i32) as f32,
+                y: (10 * offset) as f32,
+            };
+            let end = WorldPoint {
+                x: (5 * ISO_GRID_SIZE as i32) as f32,
+                y: (10 * offset) as f32,
+            };
 
-            canvas.draw_line(ScreenPoint::from(&start).to_render(), ScreenPoint::from(&end).to_render())?;
+            canvas.draw_line(
+                ScreenPoint::from(&start).to_render(),
+                ScreenPoint::from(&end).to_render(),
+            )?;
         }
 
         for i in 0..(ISO_GRID_SIZE as i32 + 1) {
             let offset = i - (ISO_GRID_SIZE as i32 / 2);
 
-            let start = WorldPoint { x: (10 * offset) as f32, y: (-5 * ISO_GRID_SIZE as i32) as f32 };
-            let end = WorldPoint { x: (10 * offset) as f32, y: (5 * ISO_GRID_SIZE as i32) as f32 };
+            let start = WorldPoint {
+                x: (10 * offset) as f32,
+                y: (-5 * ISO_GRID_SIZE as i32) as f32,
+            };
+            let end = WorldPoint {
+                x: (10 * offset) as f32,
+                y: (5 * ISO_GRID_SIZE as i32) as f32,
+            };
 
-            canvas.draw_line(ScreenPoint::from(&start).to_render(), ScreenPoint::from(&end).to_render())?;
+            canvas.draw_line(
+                ScreenPoint::from(&start).to_render(),
+                ScreenPoint::from(&end).to_render(),
+            )?;
         }
 
         let mut draw_lines = Vec::new();
