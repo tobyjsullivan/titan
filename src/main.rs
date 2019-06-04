@@ -273,7 +273,7 @@ fn main() -> Result<(), String> {
                     ..
                 } => break 'running,
                 Event::MouseButtonDown { x, y, .. } => {
-                    println!("Click! Screen: ({}, {})", x, y);
+                    println!("Click! View: ({}, {})", x, y);
                     let viewport_point = &ViewPortPoint { x, y };
 
                     let screen_point = viewport.from_view_port(&viewport_point);
