@@ -1,6 +1,7 @@
 extern crate sdl2;
 
 use sdl2::event::Event;
+use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::image::LoadTexture;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -18,7 +19,7 @@ const WINDOW_PADDING: u32 = 20;
 const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
 const ISO_GRID_SIZE: u32 = 100;
 
-const GRID_SCALE: f32 = 10.0;
+const GRID_SCALE: f32 = 20.0;
 
 struct ScreenPoint {
     x: i32,
@@ -149,6 +150,48 @@ fn draw_iso_sprite(
     Ok(())
 }
 
+fn fill_block(canvas: &mut Canvas<Window>, x: u32, y: u32) -> Result<(), String> {
+    let w_top = x as f32;
+    let w_bottom = (x + 1) as f32;
+    let w_left = y as f32;
+    let w_right = (y + 1) as f32;
+
+    let s_top_left = ScreenPoint::from(&WorldPoint {
+        x: w_top,
+        y: w_left,
+    });
+    let s_top_right = ScreenPoint::from(&WorldPoint {
+        x: w_top,
+        y: w_right,
+    });
+    let s_bottom_left = ScreenPoint::from(&WorldPoint {
+        x: w_bottom,
+        y: w_left,
+    });
+    let s_bottom_right = ScreenPoint::from(&WorldPoint {
+        x: w_bottom,
+        y: w_right,
+    });
+
+    let vx = [
+        s_top_left.x as i16,
+        s_top_right.x as i16,
+        s_bottom_right.x as i16,
+        s_bottom_left.x as i16,
+    ];
+    let vy = [
+        s_top_left.y as i16,
+        s_top_right.y as i16,
+        s_bottom_right.y as i16,
+        s_bottom_left.y as i16,
+    ];
+
+    let color = Color::RGBA(255, 255, 255, 150);
+    canvas.filled_polygon(&vx[..], &vy[..], color)?;
+
+    Ok(())
+}
+
 fn main() -> Result<(), String> {
     let sdl_ctx = sdl2::init()?;
     let vid_subsystem = sdl_ctx.video()?;
@@ -168,6 +211,8 @@ fn main() -> Result<(), String> {
 
     let tx = texture_creator.load_texture("art/test_sprite.png")?;
 
+    let mut cur_block_x = 0;
+    let mut cur_block_y = 0;
     let mut scale = 1.0;
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -183,6 +228,10 @@ fn main() -> Result<(), String> {
                     println!("Screen: ({}, {})", screen_point.x, screen_point.y);
                     let world_point: WorldPoint = screen_point.into();
                     println!("World: ({}, {})", world_point.x, world_point.y);
+
+                    cur_block_x = world_point.x as u32;
+                    cur_block_y = world_point.y as u32;
+
                     lines.push(world_point);
                 }
                 Event::MouseWheel { y, .. } => {
@@ -247,6 +296,8 @@ fn main() -> Result<(), String> {
         canvas.draw_lines(draw_lines.as_slice())?;
 
         draw_iso_sprite(&mut canvas, &tx, WorldPoint { x: 5.0, y: 5.0 })?;
+
+        fill_block(&mut canvas, cur_block_x, cur_block_y)?;
 
         canvas.present();
         let draw_time = draw_begin.elapsed();
