@@ -54,7 +54,6 @@ impl ScreenPoint {
 
 impl From<&WorldPoint> for ScreenPoint {
     fn from(world_point: &WorldPoint) -> Self {
-        // First apply transform to point.
         let transformed = Self::transform(world_point.x, world_point.y);
 
         ScreenPoint {
@@ -117,8 +116,8 @@ struct ViewPort {
 impl ViewPort {
     fn to_view_port(&self, screen: &ScreenPoint) -> ViewPortPoint {
         // Adjust coordinates by viewport offset.
-        let x = screen.x - self.focal_point.x;
-        let y = screen.y - self.focal_point.y;
+        let x: i32 = screen.x - self.focal_point.x;
+        let y: i32 = screen.y - self.focal_point.y;
 
         // Translate point to centre of screen.
         let h_center = WINDOW_WIDTH / 2;
@@ -160,13 +159,11 @@ fn draw_iso_sprite(
     let scaled_w = q.width as f32 * scale;
     let scaled_h = q.height as f32 * scale;
 
-    // println!("Texture: w: {}; h: {}", q.width, q.height);
     // Anchor is center-bottom of texture.
     let anchor_x = scaled_w / 2.0;
     let anchor_y = scaled_h;
     let screen_offset_x = screen.x - anchor_x as i32;
     let screen_offset_y = screen.y - anchor_y as i32;
-    // println!("Offset X: {}; Y: {}", screen_offset_x, screen_offset_y);
 
     let viewport_origin = viewport.to_view_port(&ScreenPoint {
         x: screen_offset_x,
@@ -191,8 +188,8 @@ fn draw_iso_sprite(
 fn fill_block(
     canvas: &mut Canvas<Window>,
     viewport: &ViewPort,
-    x: u32,
-    y: u32,
+    x: i32,
+    y: i32,
 ) -> Result<(), String> {
     let prior_color = canvas.draw_color();
 
@@ -285,8 +282,14 @@ fn main() -> Result<(), String> {
                     // Update viewport focal point
                     // viewport.focal_point = screen_point;
 
-                    cur_block_x = world_point.x as u32;
-                    cur_block_y = world_point.y as u32;
+                    cur_block_x = world_point.x as i32;
+                    if world_point.x < 0.0 {
+                        cur_block_x = (world_point.x - 1.0) as i32;
+                    }
+                    cur_block_y = world_point.y as i32;
+                    if world_point.y < 0.0 {
+                        cur_block_y = (world_point.y - 1.0) as i32;
+                    }
 
                     lines.push(world_point);
                 }
@@ -352,7 +355,7 @@ fn main() -> Result<(), String> {
         for world_point in &lines {
             draw_lines.push(ScreenPoint::from(world_point).to_render(&viewport));
         }
-        // println!("{:?}", draw_lines);
+
         canvas.draw_lines(draw_lines.as_slice())?;
 
         canvas.present();
