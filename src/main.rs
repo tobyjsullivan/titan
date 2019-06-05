@@ -190,6 +190,7 @@ fn fill_block(
     viewport: &ViewPort,
     x: i32,
     y: i32,
+    color: Color,
 ) -> Result<(), String> {
     let prior_color = canvas.draw_color();
 
@@ -228,7 +229,6 @@ fn fill_block(
         v_bottom_left.y as i16,
     ];
 
-    let color = Color::RGBA(255, 255, 255, 150);
     canvas.filled_polygon(&vx[..], &vy[..], color)?;
 
     canvas.set_draw_color(prior_color);
@@ -349,7 +349,8 @@ fn main() -> Result<(), String> {
 
         draw_iso_sprite(&mut canvas, &viewport, &tx, WorldPoint { x: 5.0, y: 5.0 })?;
 
-        fill_block(&mut canvas, &viewport, cur_block_x, cur_block_y)?;
+        let color = Color::RGBA(255, 255, 255, 150);
+        fill_block(&mut canvas, &viewport, cur_block_x, cur_block_y, color)?;
 
         let mut draw_lines = Vec::new();
         for world_point in &lines {
