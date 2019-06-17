@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+mod state;
+
 use sdl2::event::Event;
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::image::LoadTexture;
@@ -8,6 +10,7 @@ use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;
+use state::{GameBoard, GameState, Vertex, BOARD_HEIGHT, BOARD_WIDTH};
 use std::f32::consts::PI;
 use std::ops::Sub;
 use std::time::{Duration, Instant};
@@ -18,6 +21,8 @@ const WINDOW_PADDING: u32 = 20;
 
 const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
 const ISO_GRID_SIZE: u32 = 100;
+
+const HEIGHT_UNIT_OFFSET: u32 = 5;
 
 const GRID_SCALE: f32 = 20.0;
 
@@ -40,13 +45,16 @@ impl ScreenPoint {
     /// |  sin Θ    sin Θ  |
     /// |_                _|
     ///
-    fn transform(x: f32, y: f32) -> (f32, f32) {
+    fn transform(x: f32, y: f32, h: u8) -> (f32, f32) {
         // TODO (toby): Scale these properly.
         let x = x * GRID_SCALE;
         let y = y * GRID_SCALE;
 
         let out_x = (x - y) * ISO_ANGLE_RADS.cos();
-        let out_y = (x + y) * ISO_ANGLE_RADS.sin();
+        let mut out_y = (x + y) * ISO_ANGLE_RADS.sin();
+
+        // Apply height transform.
+        out_y -= h as f32 * HEIGHT_UNIT_OFFSET as f32;
 
         (out_x, out_y)
     }
@@ -54,7 +62,7 @@ impl ScreenPoint {
 
 impl From<&WorldPoint> for ScreenPoint {
     fn from(world_point: &WorldPoint) -> Self {
-        let transformed = Self::transform(world_point.x, world_point.y);
+        let transformed = Self::transform(world_point.x, world_point.y, world_point.h);
 
         ScreenPoint {
             x: transformed.0 as i32,
@@ -71,6 +79,7 @@ impl From<&WorldPoint> for ScreenPoint {
 struct WorldPoint {
     x: f32,
     y: f32,
+    h: u8,
 }
 
 impl WorldPoint {
@@ -98,6 +107,7 @@ impl From<&ScreenPoint> for WorldPoint {
         Self {
             x: inverse.0,
             y: inverse.1,
+            h: 0, // TODO (toby): is it possible to infer actual height?
         }
     }
 }
@@ -188,6 +198,7 @@ fn draw_iso_sprite(
 fn fill_block(
     canvas: &mut Canvas<Window>,
     viewport: &ViewPort,
+    board: &GameBoard,
     x: i32,
     y: i32,
     color: Color,
@@ -199,21 +210,53 @@ fn fill_block(
     let w_left = y as f32;
     let w_right = (y + 1) as f32;
 
+    let mut h: u8 = 0;
+    if point_on_board(x, y) {
+        h = board.vertex_height(Vertex {
+            x: x as u32,
+            y: y as u32,
+        });
+    }
     let v_top_left = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
         x: w_top,
         y: w_left,
+        h,
     }));
+    let mut h: u8 = 0;
+    if point_on_board(x, y + 1) {
+        h = board.vertex_height(Vertex {
+            x: x as u32,
+            y: y as u32 + 1,
+        });
+    }
     let v_top_right = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
         x: w_top,
         y: w_right,
+        h,
     }));
+    let mut h: u8 = 0;
+    if point_on_board(x + 1, y) {
+        h = board.vertex_height(Vertex {
+            x: x as u32 + 1,
+            y: y as u32,
+        });
+    }
     let v_bottom_left = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
         x: w_bottom,
         y: w_left,
+        h,
     }));
+    let mut h: u8 = 0;
+    if point_on_board(x + 1, y + 1) {
+        h = board.vertex_height(Vertex {
+            x: x as u32 + 1,
+            y: y as u32 + 1,
+        });
+    }
     let v_bottom_right = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
         x: w_bottom,
         y: w_right,
+        h,
     }));
 
     let vx = [
@@ -234,6 +277,10 @@ fn fill_block(
     canvas.set_draw_color(prior_color);
 
     Ok(())
+}
+
+fn point_on_board(x: i32, y: i32) -> bool {
+    x >= 0 && x <= BOARD_WIDTH as i32 && y >= 0 && y <= BOARD_HEIGHT as i32
 }
 
 fn main() -> Result<(), String> {
@@ -261,6 +308,8 @@ fn main() -> Result<(), String> {
     let mut cur_block_x = 0;
     let mut cur_block_y = 0;
     let mut scale = 1.0;
+
+    let game = GameState::new();
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -269,6 +318,20 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::MouseMotion { x, y, .. } => {
+                    let viewport_point = &ViewPortPoint { x, y };
+                    let screen_point = viewport.from_view_port(&viewport_point);
+                    let world_point: WorldPoint = (&screen_point).into();
+
+                    cur_block_x = world_point.x as i32;
+                    if world_point.x < 0.0 {
+                        cur_block_x = (world_point.x - 1.0) as i32;
+                    }
+                    cur_block_y = world_point.y as i32;
+                    if world_point.y < 0.0 {
+                        cur_block_y = (world_point.y - 1.0) as i32;
+                    }
+                }
                 Event::MouseButtonDown { x, y, .. } => {
                     println!("Click! View: ({}, {})", x, y);
                     let viewport_point = &ViewPortPoint { x, y };
@@ -281,15 +344,6 @@ fn main() -> Result<(), String> {
 
                     // Update viewport focal point
                     // viewport.focal_point = screen_point;
-
-                    cur_block_x = world_point.x as i32;
-                    if world_point.x < 0.0 {
-                        cur_block_x = (world_point.x - 1.0) as i32;
-                    }
-                    cur_block_y = world_point.y as i32;
-                    if world_point.y < 0.0 {
-                        cur_block_y = (world_point.y - 1.0) as i32;
-                    }
 
                     lines.push(world_point);
                 }
@@ -315,42 +369,26 @@ fn main() -> Result<(), String> {
 
         canvas.set_draw_color(Color::RGB(0, 0, 0));
 
-        for i in 0..(ISO_GRID_SIZE as i32 + 1) {
-            let start = WorldPoint {
-                x: 0.0,
-                y: i as f32,
-            };
-            let end = WorldPoint {
-                x: ISO_GRID_SIZE as f32,
-                y: i as f32,
-            };
-
-            canvas.draw_line(
-                ScreenPoint::from(&start).to_render(&viewport),
-                ScreenPoint::from(&end).to_render(&viewport),
-            )?;
-        }
-
-        for i in 0..(ISO_GRID_SIZE as i32 + 1) {
-            let start = WorldPoint {
-                x: i as f32,
-                y: 0.0,
-            };
-            let end = WorldPoint {
-                x: i as f32,
-                y: ISO_GRID_SIZE as f32,
-            };
-
-            canvas.draw_line(
-                ScreenPoint::from(&start).to_render(&viewport),
-                ScreenPoint::from(&end).to_render(&viewport),
-            )?;
-        }
-
-        draw_iso_sprite(&mut canvas, &viewport, &tx, WorldPoint { x: 5.0, y: 5.0 })?;
+        draw_iso_sprite(
+            &mut canvas,
+            &viewport,
+            &tx,
+            WorldPoint {
+                x: 5.0,
+                y: 5.0,
+                h: 0,
+            },
+        )?;
 
         let color = Color::RGBA(255, 255, 255, 150);
-        fill_block(&mut canvas, &viewport, cur_block_x, cur_block_y, color)?;
+        fill_block(
+            &mut canvas,
+            &viewport,
+            &game.board,
+            cur_block_x,
+            cur_block_y,
+            color,
+        )?;
 
         let mut draw_lines = Vec::new();
         for world_point in &lines {
@@ -358,6 +396,19 @@ fn main() -> Result<(), String> {
         }
 
         canvas.draw_lines(draw_lines.as_slice())?;
+
+        for y in 0..(BOARD_HEIGHT + 1) {
+            for x in 0..(BOARD_WIDTH + 1) {
+                // Map the board vertex to a ViewportPoint and draw the point.
+                let h = game.board.vertex_height(Vertex { x, y });
+                let x = x as f32;
+                let y = y as f32;
+
+                let point = WorldPoint { x, y, h };
+
+                canvas.draw_point(ScreenPoint::from(&point).to_render(&viewport))?;
+            }
+        }
 
         canvas.present();
         let draw_time = draw_begin.elapsed();
