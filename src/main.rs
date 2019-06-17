@@ -33,7 +33,7 @@ struct ScreenPoint {
 
 impl ScreenPoint {
     fn to_render(&self, viewport: &ViewPort) -> rect::Point {
-        let viewport_point = viewport.to_view_port(&self);
+        let viewport_point = viewport.to_viewport_point(&self);
 
         rect::Point::new(viewport_point.x, viewport_point.y)
     }
@@ -124,7 +124,7 @@ struct ViewPort {
 }
 
 impl ViewPort {
-    fn to_view_port(&self, screen: &ScreenPoint) -> ViewPortPoint {
+    fn to_viewport_point(&self, screen: &ScreenPoint) -> ViewPortPoint {
         // Adjust coordinates by viewport offset.
         let x: i32 = screen.x - self.focal_point.x;
         let y: i32 = screen.y - self.focal_point.y;
@@ -138,7 +138,7 @@ impl ViewPort {
         ViewPortPoint { x, y }
     }
 
-    fn from_view_port(&self, view: &ViewPortPoint) -> ScreenPoint {
+    fn from_viewport_point(&self, view: &ViewPortPoint) -> ScreenPoint {
         // Translate point from centre of screen.
         let h_center = WINDOW_WIDTH / 2;
         let v_center = WINDOW_HEIGHT / 2;
@@ -175,7 +175,7 @@ fn draw_iso_sprite(
     let screen_offset_x = screen.x - anchor_x as i32;
     let screen_offset_y = screen.y - anchor_y as i32;
 
-    let viewport_origin = viewport.to_view_port(&ScreenPoint {
+    let viewport_origin = viewport.to_viewport_point(&ScreenPoint {
         x: screen_offset_x,
         y: screen_offset_y,
     });
@@ -217,7 +217,7 @@ fn fill_block(
             y: y as u32,
         });
     }
-    let v_top_left = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
+    let v_top_left = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
         x: w_top,
         y: w_left,
         h,
@@ -226,10 +226,10 @@ fn fill_block(
     if point_on_board(x, y + 1) {
         h = board.vertex_height(Vertex {
             x: x as u32,
-            y: y as u32 + 1,
+            y: (y + 1) as u32,
         });
     }
-    let v_top_right = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
+    let v_top_right = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
         x: w_top,
         y: w_right,
         h,
@@ -237,11 +237,11 @@ fn fill_block(
     let mut h: u8 = 0;
     if point_on_board(x + 1, y) {
         h = board.vertex_height(Vertex {
-            x: x as u32 + 1,
+            x: (x + 1) as u32,
             y: y as u32,
         });
     }
-    let v_bottom_left = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
+    let v_bottom_left = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
         x: w_bottom,
         y: w_left,
         h,
@@ -249,11 +249,11 @@ fn fill_block(
     let mut h: u8 = 0;
     if point_on_board(x + 1, y + 1) {
         h = board.vertex_height(Vertex {
-            x: x as u32 + 1,
-            y: y as u32 + 1,
+            x: (x + 1) as u32,
+            y: (y + 1) as u32,
         });
     }
-    let v_bottom_right = viewport.to_view_port(&ScreenPoint::from(&WorldPoint {
+    let v_bottom_right = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
         x: w_bottom,
         y: w_right,
         h,
@@ -320,7 +320,7 @@ fn main() -> Result<(), String> {
                 } => break 'running,
                 Event::MouseMotion { x, y, .. } => {
                     let viewport_point = &ViewPortPoint { x, y };
-                    let screen_point = viewport.from_view_port(&viewport_point);
+                    let screen_point = viewport.from_viewport_point(&viewport_point);
                     let world_point: WorldPoint = (&screen_point).into();
 
                     cur_block_x = world_point.x as i32;
@@ -336,7 +336,7 @@ fn main() -> Result<(), String> {
                     println!("Click! View: ({}, {})", x, y);
                     let viewport_point = &ViewPortPoint { x, y };
 
-                    let screen_point = viewport.from_view_port(&viewport_point);
+                    let screen_point = viewport.from_viewport_point(&viewport_point);
                     println!("Screen: ({}, {})", screen_point.x, screen_point.y);
 
                     let world_point: WorldPoint = (&screen_point).into();
@@ -361,9 +361,7 @@ fn main() -> Result<(), String> {
                 _ => {}
             }
         }
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
 
-        let draw_begin = Instant::now();
         canvas.set_draw_color(Color::RGB(53, 117, 189));
         canvas.clear();
 
@@ -397,8 +395,75 @@ fn main() -> Result<(), String> {
 
         canvas.draw_lines(draw_lines.as_slice())?;
 
+        // Get the bounding corners of the view port in terms of world points.
+        // This will be a irregular quadralateral (possibly trapezoid?) within the game world.
+        let view_top_left_screen: ScreenPoint =
+            viewport.from_viewport_point(&ViewPortPoint { x: 0, y: 0 });
+        let view_top_left_world: WorldPoint = (&view_top_left_screen).into();
+        let view_top_right_screen: ScreenPoint = viewport.from_viewport_point(&ViewPortPoint {
+            x: WINDOW_WIDTH as i32,
+            y: 0,
+        });
+        let view_top_right_world: WorldPoint = (&view_top_right_screen).into();
+        let view_bottom_left_screen: ScreenPoint = viewport.from_viewport_point(&ViewPortPoint {
+            x: 0,
+            y: WINDOW_HEIGHT as i32,
+        });
+        let view_bottom_left_world: WorldPoint = (&view_bottom_left_screen).into();
+        let view_bottom_right_screen: ScreenPoint = viewport.from_viewport_point(&ViewPortPoint {
+            x: WINDOW_WIDTH as i32,
+            y: WINDOW_HEIGHT as i32,
+        });
+        let view_bottom_right_world: WorldPoint = (&view_bottom_right_screen).into();
+
+        // Rather than any complex math, we can just draw a recangular bounding box around our region.
+        // This will capture more region than necessary but is fast and guarantees our viewport is a subregion.
+        let x_vals = [
+            view_top_left_world.x,
+            view_top_right_world.x,
+            view_bottom_left_world.x,
+            view_bottom_right_world.x,
+        ];
+        let y_vals = [
+            view_top_left_world.y,
+            view_top_right_world.y,
+            view_bottom_left_world.y,
+            view_bottom_right_world.y,
+        ];
+        let mut min_x = view_top_left_world.x;
+        let mut max_x = view_top_left_world.x;
+        let mut min_y = view_top_left_world.y;
+        let mut max_y = view_top_left_world.y;
+        for x in x_vals.iter() {
+            if *x < min_x {
+                min_x = *x;
+            }
+            if *x > max_x {
+                max_x = *x;
+            }
+        }
+        for y in y_vals.iter() {
+            if *y < min_y {
+                min_y = *y;
+            }
+            if *y > max_y {
+                max_y = *y;
+            }
+        }
+
+        let draw_begin = Instant::now();
         for y in 0..(BOARD_HEIGHT + 1) {
+            // Skip any points outside viewport bounding box.
+            if (y as f32) < min_y || (y as f32) > max_y {
+                continue;
+            }
+
             for x in 0..(BOARD_WIDTH + 1) {
+                // Skip any points outside viewport bounding box.
+                if (x as f32) < min_x || (x as f32) > max_x {
+                    continue;
+                }
+
                 // Map the board vertex to a ViewportPoint and draw the point.
                 let h = game.board.vertex_height(Vertex { x, y });
                 let x = x as f32;
@@ -406,12 +471,13 @@ fn main() -> Result<(), String> {
 
                 let point = WorldPoint { x, y, h };
 
-                canvas.draw_point(ScreenPoint::from(&point).to_render(&viewport))?;
+                let view_point = ScreenPoint::from(&point).to_render(&viewport);
+                canvas.draw_point(view_point)?;
             }
         }
 
+        // println!("Compute and draw: {:?}", draw_begin.elapsed());
         canvas.present();
-        let draw_time = draw_begin.elapsed();
     }
 
     Ok(())
