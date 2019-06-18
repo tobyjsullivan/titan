@@ -5,7 +5,7 @@ mod view;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use state::GameState;
+use state::{GameState, PlayerMode};
 use view::{ViewPort, ViewPortPoint};
 
 const WINDOW_WIDTH: u32 = 800;
@@ -47,7 +47,10 @@ fn main() -> Result<(), String> {
                     let viewport_point = ViewPortPoint { x, y };
                     println!("Click! View: {:?}", viewport_point);
 
-                    viewport.update_focus(viewport_point);
+                    match game.mode {
+                        PlayerMode::Focus => viewport.update_focus(viewport_point),
+                        _ => {}
+                    }
                 }
                 _ => {}
             }

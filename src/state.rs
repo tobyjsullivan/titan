@@ -41,13 +41,21 @@ impl GameBoard {
         self.vertices[Self::vertex_index(v)]
     }
 
-    fn block_info(&self, x: VertexPosition, y: VertexPosition) -> BlockInfo {
-        BlockInfo {
-            nw_height: self.vertex_height(Vertex { x, y }),
-            ne_height: self.vertex_height(Vertex { x: x + 1, y }),
-            se_height: self.vertex_height(Vertex { x: x + 1, y: y + 1 }),
-            sw_height: self.vertex_height(Vertex { x, y: y + 1 }),
+    pub fn block_land_type(&self, x: VertexPosition, y: VertexPosition) -> LandType {
+        for &h in [
+            self.vertex_height(Vertex { x, y }),
+            self.vertex_height(Vertex { x: x + 1, y }),
+            self.vertex_height(Vertex { x: x + 1, y: y + 1 }),
+            self.vertex_height(Vertex { x, y: y + 1 }),
+        ]
+        .iter()
+        {
+            if h > WATER_LEVEL {
+                return LandType::Land;
+            }
         }
+
+        LandType::Water
     }
 }
 
@@ -56,19 +64,9 @@ pub struct Vertex {
     pub y: VertexPosition,
 }
 
-struct BlockInfo {
-    nw_height: VertexHeight,
-    ne_height: VertexHeight,
-    sw_height: VertexHeight,
-    se_height: VertexHeight,
-}
-
-impl BlockInfo {
-    fn is_flat(&self) -> bool {
-        (self.nw_height == self.ne_height
-            && self.nw_height == self.sw_height
-            && self.nw_height == self.se_height)
-    }
+pub enum LandType {
+    Water,
+    Land,
 }
 
 struct ObjectPlacement {
@@ -97,6 +95,7 @@ pub enum Direction {
 }
 
 pub enum PlayerMode {
+    Focus,
     RaiseLower { radius: u8 },
     PlaceObject { obj: Object, orientation: Direction },
 }
@@ -110,7 +109,7 @@ impl GameState {
     pub fn new() -> Self {
         Self {
             board: GameBoard::new(),
-            mode: PlayerMode::RaiseLower { radius: 0 },
+            mode: PlayerMode::Focus,
         }
     }
 }

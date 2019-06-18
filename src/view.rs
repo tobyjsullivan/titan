@@ -1,4 +1,6 @@
-use crate::state::{GameBoard, GameState, Vertex, BOARD_HEIGHT, BOARD_WIDTH, WATER_LEVEL};
+use crate::state::{
+    GameBoard, GameState, LandType, Vertex, BOARD_HEIGHT, BOARD_WIDTH, WATER_LEVEL,
+};
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
 use sdl2::rect;
@@ -264,7 +266,10 @@ impl ViewPort {
                 }
 
                 if x < BOARD_WIDTH && y < BOARD_HEIGHT {
-                    let mut tile_color = Color::from(COLOR_WATER);
+                    let mut tile_color = match game.board.block_land_type(x, y) {
+                        LandType::Water => Color::from(COLOR_WATER),
+                        LandType::Land => Color::from(COLOR_LAND),
+                    };
 
                     fill_block(canvas, &self, &game.board, x as i32, y as i32, tile_color)?;
                 }
