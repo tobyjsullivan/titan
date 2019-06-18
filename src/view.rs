@@ -180,15 +180,14 @@ impl ViewPort {
         } else if world_point.y < 0.0 {
             None
         } else {
-            Some(Block { x: cur_block_x as u32, y: cur_block_y as u32 })
+            Some(Block {
+                x: cur_block_x as u32,
+                y: cur_block_y as u32,
+            })
         }
     }
 
-    pub fn render(
-        &self,
-        canvas: &mut Canvas<Window>,
-        game: &GameState,
-    ) -> Result<(), String> {
+    pub fn render(&self, canvas: &mut Canvas<Window>, game: &GameState) -> Result<(), String> {
         canvas.set_draw_color(COLOR_DARK_GRAY);
         canvas.clear();
 

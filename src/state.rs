@@ -46,7 +46,9 @@ impl GameBoard {
             Self::vertex_index(Vertex { x: 7, y: 5 }),
             Self::vertex_index(Vertex { x: 8, y: 4 }),
             Self::vertex_index(Vertex { x: 8, y: 5 }),
-        ].iter() {
+        ]
+        .iter()
+        {
             res.vertices[v] += 1;
         }
 
