@@ -1,17 +1,24 @@
-use crate::state::{GameBoard, GameState, Vertex, BOARD_HEIGHT, BOARD_WIDTH};
+use crate::state::{GameBoard, GameState, Vertex, BOARD_HEIGHT, BOARD_WIDTH, WATER_LEVEL};
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
 use sdl2::rect;
-use sdl2::render::{Canvas};
+use sdl2::render::Canvas;
 use sdl2::video::Window;
 use std::f32::consts::PI;
-use std::time::{Instant};
+use std::time::Instant;
 
 const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
 
 const HEIGHT_UNIT_OFFSET: u32 = 5;
 
 const GRID_SCALE: f32 = 20.0;
+
+const COLOR_WHITE: (u8, u8, u8) = (255, 255, 255);
+const COLOR_DARK_GRAY: (u8, u8, u8) = (37, 37, 37);
+const COLOR_BLACK: (u8, u8, u8) = (0, 0, 0);
+const COLOR_HIGHLIGHT_BLOCK: (u8, u8, u8, u8) = (255, 255, 255, 150);
+const COLOR_WATER: (u8, u8, u8) = (53, 117, 189);
+const COLOR_LAND: (u8, u8, u8) = (0, 200, 0);
 
 #[derive(Debug)]
 pub struct ScreenPoint {
@@ -182,13 +189,10 @@ impl ViewPort {
             cur_block_y = (world_point.y - 1.0) as i32;
         }
 
-        canvas.set_draw_color(Color::RGB(53, 117, 189));
+        canvas.set_draw_color(COLOR_DARK_GRAY);
         canvas.clear();
 
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-
-        let color = Color::RGBA(255, 255, 255, 150);
-        fill_block(canvas, &self, &game.board, cur_block_x, cur_block_y, color)?;
+        canvas.set_draw_color(COLOR_BLACK);
 
         // Get the bounding corners of the view port in terms of world points.
         // This will be a irregular quadralateral (possibly trapezoid?) within the game world.
@@ -259,6 +263,12 @@ impl ViewPort {
                     continue;
                 }
 
+                if x < BOARD_WIDTH && y < BOARD_HEIGHT {
+                    let mut tile_color = Color::from(COLOR_WATER);
+
+                    fill_block(canvas, &self, &game.board, x as i32, y as i32, tile_color)?;
+                }
+
                 // Map the board vertex to a ViewportPoint and draw the point.
                 let h = game.board.vertex_height(Vertex { x, y });
                 let x = x as f32;
@@ -270,6 +280,16 @@ impl ViewPort {
                 canvas.draw_point(view_point)?;
             }
         }
+
+        // Highlight the block currently under the cursor.
+        fill_block(
+            canvas,
+            &self,
+            &game.board,
+            cur_block_x,
+            cur_block_y,
+            Color::from(COLOR_HIGHLIGHT_BLOCK),
+        )?;
 
         // println!("Compute and draw: {:?}", draw_begin.elapsed());
 

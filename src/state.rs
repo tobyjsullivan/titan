@@ -1,7 +1,7 @@
 pub const BOARD_WIDTH: u32 = 1000;
 pub const BOARD_HEIGHT: u32 = 1000;
 
-const WATER_LEVEL: u8 = 0;
+pub const WATER_LEVEL: u8 = 0;
 
 pub type ObjectDimension = u8;
 pub type VertexHeight = u8;
