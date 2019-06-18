@@ -127,9 +127,15 @@ pub enum PlayerMode {
     PlaceObject { obj: Object, orientation: Direction },
 }
 
+pub enum SelectionMode {
+    None,
+    Vertex { radius: u8 },
+    Blocks { w: u8, h: u8 },
+}
+
 pub struct GameState {
     pub board: GameBoard,
-    pub mode: PlayerMode,
+    pub player_mode: PlayerMode,
     pub highlighted_block: Option<Block>,
 }
 
@@ -137,8 +143,21 @@ impl GameState {
     pub fn new() -> Self {
         Self {
             board: GameBoard::new(),
-            mode: PlayerMode::Focus,
+            // player_mode: PlayerMode::Focus,
+            // player_mode: PlayerMode::PlaceObject { obj: Object::Forest, orientation: Direction::North },
+            player_mode: PlayerMode::RaiseLower { radius: 0 },
             highlighted_block: None,
+        }
+    }
+
+    pub fn selection_mode(&self) -> SelectionMode {
+        match self.player_mode {
+            PlayerMode::Focus => SelectionMode::None,
+            PlayerMode::PlaceObject { .. } => {
+                // TODO (toby): Properly determine object size.
+                SelectionMode::Blocks { w: 5, h: 3 }
+            }
+            PlayerMode::RaiseLower { radius } => SelectionMode::Vertex { radius },
         }
     }
 }

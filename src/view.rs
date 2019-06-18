@@ -1,5 +1,6 @@
 use crate::state::{
-    Block, GameBoard, GameState, LandType, Vertex, BOARD_HEIGHT, BOARD_WIDTH, WATER_LEVEL,
+    Block, GameBoard, GameState, LandType, SelectionMode, Vertex, BOARD_HEIGHT, BOARD_WIDTH,
+    WATER_LEVEL,
 };
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
@@ -285,20 +286,75 @@ impl ViewPort {
 
         // Highlight the block currently under the cursor.
         if let Some(block) = &game.highlighted_block {
-            fill_block(
-                canvas,
-                &self,
-                &game.board,
-                block.x as i32,
-                block.y as i32,
-                Color::from(COLOR_HIGHLIGHT_BLOCK),
-            )?;
+            match game.selection_mode() {
+                SelectionMode::None => {}
+                SelectionMode::Blocks { w, h } => {
+                    // TODO (toby): Highlight all blocks in (w X h) with current block at the top.
+                    // w is positive along x-axis; h is positive along y-axis.
+                    for y in 0..h {
+                        for x in 0..w {
+                            fill_block(
+                                canvas,
+                                &self,
+                                &game.board,
+                                block.x as i32 + x as i32,
+                                block.y as i32 + y as i32,
+                                Color::from(COLOR_HIGHLIGHT_BLOCK),
+                            )?;
+                        }
+                    }
+                }
+                SelectionMode::Vertex { radius } => {
+                    for y in (block.y as i32 - radius as i32)..(block.y as i32 + radius as i32 + 1)
+                    {
+                        for x in
+                            (block.x as i32 - radius as i32)..(block.x as i32 + radius as i32 + 1)
+                        {
+                            draw_vertex(canvas, &self, &game.board, x, y, Color::from(COLOR_WHITE));
+                        }
+                    }
+                }
+            }
         }
 
         // println!("Compute and draw: {:?}", draw_begin.elapsed());
 
         Ok(())
     }
+}
+
+fn draw_vertex(
+    canvas: &mut Canvas<Window>,
+    viewport: &ViewPort,
+    board: &GameBoard,
+    x: i32,
+    y: i32,
+    color: Color,
+) -> Result<(), String> {
+    let prior_color = canvas.draw_color();
+
+    let w_top = x as f32;
+    let w_left = y as f32;
+
+    let mut h: u8 = 0;
+    if point_on_board(x, y) {
+        h = board.vertex_height(Vertex {
+            x: x as u32,
+            y: y as u32,
+        });
+    }
+    let v_top_left = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
+        x: w_top,
+        y: w_left,
+        h,
+    }));
+
+    canvas.set_draw_color(color);
+    canvas.draw_point(rect::Point::new(v_top_left.x, v_top_left.y));
+
+    canvas.set_draw_color(prior_color);
+
+    Ok(())
 }
 
 fn fill_block(

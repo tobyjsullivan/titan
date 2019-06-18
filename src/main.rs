@@ -44,7 +44,7 @@ fn main() -> Result<(), String> {
                     let viewport_point = ViewPortPoint { x, y };
                     println!("Click! View: {:?}", viewport_point);
 
-                    match game.mode {
+                    match game.player_mode {
                         PlayerMode::Focus => viewport.update_focus(viewport_point),
                         _ => {}
                     }
