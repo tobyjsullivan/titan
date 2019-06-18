@@ -21,9 +21,14 @@ impl GameBoard {
 
         // Set a couple vertices to WATER+1
         let v1 = Self::vertex_index(Vertex { x: 5, y: 3 });
-        let v2 = Self::vertex_index(Vertex { x: 13, y: 8 });
-        res.vertices[v1] = WATER_LEVEL + 1;
-        res.vertices[v2] = WATER_LEVEL + 1;
+        let v2 = Self::vertex_index(Vertex { x: 5, y: 4 });
+        let v3 = Self::vertex_index(Vertex { x: 5, y: 5 });
+        let v4 = Self::vertex_index(Vertex { x: 5, y: 6 });
+        let v5 = Self::vertex_index(Vertex { x: 6, y: 5 });
+        let v6 = Self::vertex_index(Vertex { x: 6, y: 6 });
+        for &v in [v1, v2, v3, v4, v5, v6].iter() {
+            res.vertices[v] = WATER_LEVEL + 1;
+        }
 
         res
     }
@@ -72,7 +77,7 @@ struct ObjectPlacement {
     origin: Vertex,
 }
 
-enum Object {
+pub enum Object {
     Forest,
 }
 
@@ -91,14 +96,21 @@ pub enum Direction {
     West,
 }
 
+pub enum PlayerMode {
+    RaiseLower { radius: u8 },
+    PlaceObject { obj: Object, orientation: Direction },
+}
+
 pub struct GameState {
     pub board: GameBoard,
+    pub mode: PlayerMode,
 }
 
 impl GameState {
     pub fn new() -> Self {
         Self {
             board: GameBoard::new(),
+            mode: PlayerMode::RaiseLower { radius: 0 },
         }
     }
 }
