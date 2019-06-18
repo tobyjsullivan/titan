@@ -28,9 +28,7 @@ fn main() -> Result<(), String> {
 
     let mut viewport = ViewPort::new(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    let game = GameState::new();
-    let mut cursor_x = 0;
-    let mut cursor_y = 0;
+    let mut game = GameState::new();
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -40,8 +38,7 @@ fn main() -> Result<(), String> {
                     ..
                 } => break 'running,
                 Event::MouseMotion { x, y, .. } => {
-                    cursor_x = x;
-                    cursor_y = y;
+                    game.highlighted_block = viewport.get_block_under_cursor(x, y);
                 }
                 Event::MouseButtonDown { x, y, .. } => {
                     let viewport_point = ViewPortPoint { x, y };
@@ -56,7 +53,7 @@ fn main() -> Result<(), String> {
             }
         }
 
-        viewport.render(&mut canvas, &game, cursor_x, cursor_y)?;
+        viewport.render(&mut canvas, &game)?;
         canvas.present();
     }
 

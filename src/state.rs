@@ -128,6 +128,7 @@ pub enum PlayerMode {
 pub struct GameState {
     pub board: GameBoard,
     pub mode: PlayerMode,
+    pub highlighted_block: Option<Block>,
 }
 
 impl GameState {
@@ -135,6 +136,7 @@ impl GameState {
         Self {
             board: GameBoard::new(),
             mode: PlayerMode::Focus,
+            highlighted_block: None,
         }
     }
 }

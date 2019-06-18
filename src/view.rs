@@ -188,8 +188,6 @@ impl ViewPort {
         &self,
         canvas: &mut Canvas<Window>,
         game: &GameState,
-        cursor_x: i32,
-        cursor_y: i32,
     ) -> Result<(), String> {
         canvas.set_draw_color(COLOR_DARK_GRAY);
         canvas.clear();
@@ -287,18 +285,15 @@ impl ViewPort {
         }
 
         // Highlight the block currently under the cursor.
-        match self.get_block_under_cursor(cursor_x, cursor_y) {
-            Some(block) => {
-                    fill_block(
-                    canvas,
-                    &self,
-                    &game.board,
-                    block.x as i32,
-                    block.y as i32,
-                    Color::from(COLOR_HIGHLIGHT_BLOCK),
-                )?;
-            }
-            None => {}
+        if let Some(block) = &game.highlighted_block {
+            fill_block(
+                canvas,
+                &self,
+                &game.board,
+                block.x as i32,
+                block.y as i32,
+                Color::from(COLOR_HIGHLIGHT_BLOCK),
+            )?;
         }
 
         // println!("Compute and draw: {:?}", draw_begin.elapsed());
