@@ -6,6 +6,7 @@ pub const WATER_LEVEL: u8 = 0;
 pub type ObjectDimension = u8;
 pub type VertexHeight = u8;
 pub type VertexPosition = u32;
+pub type BlockPosition = u32;
 
 pub struct GameBoard {
     vertices: [VertexHeight; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
@@ -20,14 +21,33 @@ impl GameBoard {
         };
 
         // Set a couple vertices to WATER+1
-        let v1 = Self::vertex_index(Vertex { x: 5, y: 3 });
-        let v2 = Self::vertex_index(Vertex { x: 5, y: 4 });
-        let v3 = Self::vertex_index(Vertex { x: 5, y: 5 });
-        let v4 = Self::vertex_index(Vertex { x: 5, y: 6 });
-        let v5 = Self::vertex_index(Vertex { x: 6, y: 5 });
-        let v6 = Self::vertex_index(Vertex { x: 6, y: 6 });
-        for &v in [v1, v2, v3, v4, v5, v6].iter() {
-            res.vertices[v] = WATER_LEVEL + 1;
+        for &v in [
+            Self::vertex_index(Vertex { x: 5, y: 3 }),
+            Self::vertex_index(Vertex { x: 5, y: 4 }),
+            Self::vertex_index(Vertex { x: 5, y: 5 }),
+            Self::vertex_index(Vertex { x: 5, y: 6 }),
+            Self::vertex_index(Vertex { x: 6, y: 3 }),
+            Self::vertex_index(Vertex { x: 6, y: 4 }),
+            Self::vertex_index(Vertex { x: 6, y: 5 }),
+            Self::vertex_index(Vertex { x: 6, y: 6 }),
+            Self::vertex_index(Vertex { x: 7, y: 3 }),
+            Self::vertex_index(Vertex { x: 7, y: 4 }),
+            Self::vertex_index(Vertex { x: 7, y: 5 }),
+            Self::vertex_index(Vertex { x: 7, y: 6 }),
+            Self::vertex_index(Vertex { x: 8, y: 3 }),
+            Self::vertex_index(Vertex { x: 8, y: 4 }),
+            Self::vertex_index(Vertex { x: 8, y: 5 }),
+            Self::vertex_index(Vertex { x: 8, y: 6 }),
+            Self::vertex_index(Vertex { x: 9, y: 3 }),
+            Self::vertex_index(Vertex { x: 9, y: 4 }),
+            Self::vertex_index(Vertex { x: 9, y: 5 }),
+            Self::vertex_index(Vertex { x: 9, y: 6 }),
+            Self::vertex_index(Vertex { x: 7, y: 4 }),
+            Self::vertex_index(Vertex { x: 7, y: 5 }),
+            Self::vertex_index(Vertex { x: 8, y: 4 }),
+            Self::vertex_index(Vertex { x: 8, y: 5 }),
+        ].iter() {
+            res.vertices[v] += 1;
         }
 
         res
@@ -57,6 +77,11 @@ impl GameBoard {
 
         LandType::Water
     }
+}
+
+pub struct Block {
+    pub x: BlockPosition,
+    pub y: BlockPosition,
 }
 
 pub struct Vertex {

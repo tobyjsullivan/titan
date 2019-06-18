@@ -1,5 +1,5 @@
 use crate::state::{
-    GameBoard, GameState, LandType, Vertex, BOARD_HEIGHT, BOARD_WIDTH, WATER_LEVEL,
+    Block, GameBoard, GameState, LandType, Vertex, BOARD_HEIGHT, BOARD_WIDTH, WATER_LEVEL,
 };
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
@@ -168,6 +168,22 @@ impl ViewPort {
         ScreenPoint { x, y }
     }
 
+    pub fn get_block_under_cursor(&self, x: i32, y: i32) -> Option<Block> {
+        let viewport_point = &ViewPortPoint { x, y };
+        let screen_point = self.from_viewport_point(&viewport_point);
+        let world_point: WorldPoint = (&screen_point).into();
+
+        let mut cur_block_x = world_point.x as i32;
+        let mut cur_block_y = world_point.y as i32;
+        if world_point.x < 0.0 {
+            None
+        } else if world_point.y < 0.0 {
+            None
+        } else {
+            Some(Block { x: cur_block_x as u32, y: cur_block_y as u32 })
+        }
+    }
+
     pub fn render(
         &self,
         canvas: &mut Canvas<Window>,
@@ -175,22 +191,6 @@ impl ViewPort {
         cursor_x: i32,
         cursor_y: i32,
     ) -> Result<(), String> {
-        let viewport_point = &ViewPortPoint {
-            x: cursor_x,
-            y: cursor_y,
-        };
-        let screen_point = self.from_viewport_point(&viewport_point);
-        let world_point: WorldPoint = (&screen_point).into();
-
-        let mut cur_block_x = world_point.x as i32;
-        if world_point.x < 0.0 {
-            cur_block_x = (world_point.x - 1.0) as i32;
-        }
-        let mut cur_block_y = world_point.y as i32;
-        if world_point.y < 0.0 {
-            cur_block_y = (world_point.y - 1.0) as i32;
-        }
-
         canvas.set_draw_color(COLOR_DARK_GRAY);
         canvas.clear();
 
@@ -287,14 +287,19 @@ impl ViewPort {
         }
 
         // Highlight the block currently under the cursor.
-        fill_block(
-            canvas,
-            &self,
-            &game.board,
-            cur_block_x,
-            cur_block_y,
-            Color::from(COLOR_HIGHLIGHT_BLOCK),
-        )?;
+        match self.get_block_under_cursor(cursor_x, cursor_y) {
+            Some(block) => {
+                    fill_block(
+                    canvas,
+                    &self,
+                    &game.board,
+                    block.x as i32,
+                    block.y as i32,
+                    Color::from(COLOR_HIGHLIGHT_BLOCK),
+                )?;
+            }
+            None => {}
+        }
 
         // println!("Compute and draw: {:?}", draw_begin.elapsed());
 
@@ -366,20 +371,32 @@ fn fill_block(
         h,
     }));
 
-    let vx = [
-        v_top_left.x as i16,
-        v_top_right.x as i16,
-        v_bottom_right.x as i16,
-        v_bottom_left.x as i16,
-    ];
-    let vy = [
-        v_top_left.y as i16,
-        v_top_right.y as i16,
-        v_bottom_right.y as i16,
-        v_bottom_left.y as i16,
+    let lines = vec![
+        rect::Point::new(v_top_left.x, v_top_left.y),
+        rect::Point::new(v_top_right.x, v_top_right.y),
+        rect::Point::new(v_bottom_right.x, v_bottom_right.y),
+        rect::Point::new(v_bottom_left.x, v_bottom_left.y),
+        rect::Point::new(v_top_left.x, v_top_left.y),
     ];
 
-    canvas.filled_polygon(&vx[..], &vy[..], color)?;
+    canvas.set_draw_color(color);
+    canvas.draw_lines(lines.as_slice())?;
+
+    // Filled polygons can be restored when a better play experience is needed.
+    // let vx = [
+    //     v_top_left.x as i16,
+    //     v_top_right.x as i16,
+    //     v_bottom_right.x as i16,
+    //     v_bottom_left.x as i16,
+    // ];
+    // let vy = [
+    //     v_top_left.y as i16,
+    //     v_top_right.y as i16,
+    //     v_bottom_right.y as i16,
+    //     v_bottom_left.y as i16,
+    // ];
+
+    // canvas.filled_polygon(&vx[..], &vy[..], color)?;
 
     canvas.set_draw_color(prior_color);
 
