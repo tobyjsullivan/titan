@@ -12,6 +12,9 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use state::{GameState, PlayerMode};
+use std::ops::{Add, Sub};
+use std::thread;
+use std::time::{Duration, Instant};
 use view::sidebar::Sidebar;
 use view::viewport::Viewport;
 use view::COLOR_DARK_GRAY;
@@ -20,6 +23,9 @@ const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
 
 const SIDEBAR_WIDTH: u32 = 200;
+
+const UPDATES_PER_SECOND: u32 = 120;
+const MAX_FRAMES_PER_SECOND: u32 = 60;
 
 fn main() -> Result<(), String> {
     let sdl_ctx = sdl2::init()?;
@@ -38,8 +44,12 @@ fn main() -> Result<(), String> {
 
     let mut viewport = Viewport::new(WINDOW_WIDTH - SIDEBAR_WIDTH, WINDOW_HEIGHT, SIDEBAR_WIDTH);
     let mut sidebar = Sidebar::new(SIDEBAR_WIDTH, WINDOW_HEIGHT);
-
     let mut game = GameState::new();
+
+    let update_interval = Duration::new(0, 1_000_000_000 / UPDATES_PER_SECOND);
+    let mut next_update = Instant::now();
+    let mut last_frame = Instant::now();
+    let mut frame_count: u64 = 0;
     'running: loop {
         let mut player_actions = Vec::new();
 
@@ -101,12 +111,27 @@ fn main() -> Result<(), String> {
             }
         }
 
-        canvas.set_draw_color(COLOR_DARK_GRAY);
-        canvas.clear();
+        next_update = next_update.add(update_interval);
 
-        viewport.render(&mut canvas, &game)?;
-        sidebar.render(&mut canvas, &game)?;
-        canvas.present();
+        if last_frame.elapsed() > Duration::new(0, 1_000_000_000 / MAX_FRAMES_PER_SECOND) {
+            let render_start = Instant::now();
+            canvas.set_draw_color(COLOR_DARK_GRAY);
+            canvas.clear();
+
+            viewport.render(&mut canvas, &game)?;
+            sidebar.render(&mut canvas, &game)?;
+            canvas.present();
+
+            frame_count += 1;
+            // println!("Frame {}: {:?}", frame_count, render_start.elapsed());
+            last_frame = Instant::now();
+        }
+
+        let now = Instant::now();
+        if next_update > now {
+            let delay = next_update.sub(now);
+            thread::sleep(delay);
+        }
     }
 
     Ok(())

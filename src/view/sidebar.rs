@@ -6,7 +6,7 @@ use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
-const COLOR_SIDEBAR: (u8, u8, u8) = (150, 150, 150);
+const COLOR_SIDEBAR: (u8, u8, u8) = (132, 132, 123);
 
 pub struct Sidebar {
     width: u32,
