@@ -46,7 +46,7 @@ fn main() -> Result<(), String> {
                     ..
                 } => break 'running,
                 Event::MouseMotion { x, y, .. } => {
-                    game.highlighted_block = viewport.get_block_under_cursor(x, y);
+                    game.highlighted_block = viewport.get_block_under_cursor(&game, x, y);
                 }
                 Event::MouseButtonDown {
                     x, y, mouse_btn, ..
@@ -62,11 +62,6 @@ fn main() -> Result<(), String> {
                     if let Some(player_action) = player_action {
                         player_actions.push(player_action);
                     }
-
-                    match game.player_mode {
-                        PlayerMode::Focus => viewport.update_focus(viewport_point),
-                        _ => {}
-                    }
                 }
                 _ => {}
             }
@@ -74,13 +69,15 @@ fn main() -> Result<(), String> {
 
         // Resolve all actions.
         for &player_action in player_actions.iter() {
-            // TODO (toby): Utilize this result.
             match controller::map_player_action(&viewport, &game, player_action) {
-                Some(game_action @ GameAction::LowerTerrain) => {
-                    systems::terrain::apply(&mut game, game_action)
+                Some(GameAction::Focus) => {
+                    systems::navigation::apply_focus(&mut game);
                 }
-                Some(game_action @ GameAction::RaiseTerrain) => {
-                    systems::terrain::apply(&mut game, game_action)
+                Some(GameAction::LowerTerrain) => {
+                    systems::terrain::apply_lower_terrain(&mut game);
+                }
+                Some(GameAction::RaiseTerrain) => {
+                    systems::terrain::apply_raise_terrain(&mut game);
                 }
                 None => {}
             }

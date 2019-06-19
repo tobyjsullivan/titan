@@ -31,12 +31,6 @@ pub struct ScreenPoint {
 }
 
 impl ScreenPoint {
-    fn to_render(&self, viewport: &Viewport) -> rect::Point {
-        let viewport_point = viewport.to_viewport_point(&self);
-
-        rect::Point::new(viewport_point.x, viewport_point.y)
-    }
-
     ///  _                _
     /// |                  |
     /// |  cos Θ   -cos Θ  |
@@ -118,8 +112,13 @@ pub struct ViewportPoint {
     pub y: i32,
 }
 
+impl Into<rect::Point> for ViewportPoint {
+    fn into(self) -> rect::Point {
+        rect::Point::new(self.x, self.y)
+    }
+}
+
 pub struct Viewport {
-    focal_point: ScreenPoint,
     window_width: u32,
     window_height: u32,
     // TODO (toby): scale: f32,
@@ -129,51 +128,62 @@ pub struct Viewport {
 impl Viewport {
     pub fn new(width: u32, height: u32) -> Self {
         Self {
-            focal_point: ScreenPoint { x: 100, y: 200 },
             window_width: width,
             window_height: height,
         }
     }
 
-    pub fn update_focus(&mut self, viewport_point: ViewportPoint) {
-        let screen_point = self.from_viewport_point(&viewport_point);
+    fn compute_viewport_point(&self, game: &GameState, world_point: WorldPoint) -> ViewportPoint {
+        let screen_point = ScreenPoint::from(&world_point);
+        let screen_focal_point = ScreenPoint::from(&WorldPoint {
+            x: game.focal_point.x as f32,
+            y: game.focal_point.y as f32,
+            // Should height be normalised to keep scrolling smooth?
+            h: game.board.vertex_height(game.focal_point),
+        });
 
-        // Update viewport focal point
-        self.focal_point = screen_point;
+        let vertex_offset_x = screen_point.x - screen_focal_point.x;
+        let vertex_offset_y = screen_point.y - screen_focal_point.y;
+
+        let viewport_center_x = self.window_width / 2;
+        let viewport_center_y = self.window_height / 2;
+
+        ViewportPoint {
+            x: viewport_center_x as i32 + vertex_offset_x,
+            y: viewport_center_y as i32 + vertex_offset_y,
+        }
     }
 
-    fn to_viewport_point(&self, screen: &ScreenPoint) -> ViewportPoint {
-        // Adjust coordinates by viewport offset.
-        let x: i32 = screen.x - self.focal_point.x;
-        let y: i32 = screen.y - self.focal_point.y;
+    fn compute_world_point(&self, game: &GameState, viewport_point: ViewportPoint) -> WorldPoint {
+        // Take the mouse position and compute its offset from the centre of the screen.
+        let viewport_center_x = self.window_width / 2;
+        let viewport_center_y = self.window_height / 2;
+        let screen_offset_x = viewport_point.x - viewport_center_x as i32;
+        let screen_offset_y = viewport_point.y - viewport_center_y as i32;
 
-        // Translate point to centre of screen.
-        let h_center = self.window_width / 2;
-        let v_center = self.window_height / 2;
-        let x = x + h_center as i32;
-        let y = y + v_center as i32;
+        // Compute the current focal screen point.
+        let screen_focal_point = ScreenPoint::from(&WorldPoint {
+            x: game.focal_point.x as f32,
+            y: game.focal_point.y as f32,
+            // Should height be normalised to keep scrolling smooth?
+            h: game.board.vertex_height(game.focal_point),
+        });
 
-        ViewportPoint { x, y }
+        // Add the offset to the focal screen point to the mouse viewport position to get the
+        // mouse position screen point.
+        let point_screen_x = screen_focal_point.x + screen_offset_x;
+        let point_screen_y = screen_focal_point.y + screen_offset_y;
+
+        // Apply the inverted linear mapping (including scaling) to this mouse position screen
+        // point to get the mouse position world point.
+        WorldPoint::from(&ScreenPoint {
+            x: point_screen_x,
+            y: point_screen_y,
+        })
     }
 
-    pub fn from_viewport_point(&self, view: &ViewportPoint) -> ScreenPoint {
-        // Translate point from centre of screen.
-        let h_center = self.window_width / 2;
-        let v_center = self.window_height / 2;
-        let x = view.x - h_center as i32;
-        let y = view.y - v_center as i32;
-
-        // Adjust coordinates by viewport offset.
-        let x = x + self.focal_point.x;
-        let y = y + self.focal_point.y;
-
-        ScreenPoint { x, y }
-    }
-
-    pub fn get_block_under_cursor(&self, x: i32, y: i32) -> Option<Block> {
-        let viewport_point = &ViewportPoint { x, y };
-        let screen_point = self.from_viewport_point(&viewport_point);
-        let world_point: WorldPoint = (&screen_point).into();
+    pub fn get_block_under_cursor(&self, game: &GameState, x: i32, y: i32) -> Option<Block> {
+        let world_point = self.compute_world_point(game, ViewportPoint { x, y });
 
         let mut cur_block_x = world_point.x as i32;
         let mut cur_block_y = world_point.y as i32;
@@ -195,6 +205,7 @@ impl Viewport {
         player_action: PlayerAction,
     ) -> Option<GameAction> {
         match (&game.player_mode, &player_action) {
+            (PlayerMode::Focus, PlayerAction::WindowLeftClick { .. }) => Some(GameAction::Focus),
             (PlayerMode::RaiseLower { .. }, PlayerAction::WindowLeftClick { .. }) => {
                 Some(GameAction::RaiseTerrain)
             }
@@ -213,24 +224,29 @@ impl Viewport {
 
         // Get the bounding corners of the view port in terms of world points.
         // This will be a irregular quadralateral (possibly trapezoid?) within the game world.
-        let view_top_left_screen: ScreenPoint =
-            self.from_viewport_point(&ViewportPoint { x: 0, y: 0 });
-        let view_top_left_world: WorldPoint = (&view_top_left_screen).into();
-        let view_top_right_screen: ScreenPoint = self.from_viewport_point(&ViewportPoint {
-            x: self.window_width as i32,
-            y: 0,
-        });
-        let view_top_right_world: WorldPoint = (&view_top_right_screen).into();
-        let view_bottom_left_screen: ScreenPoint = self.from_viewport_point(&ViewportPoint {
-            x: 0,
-            y: self.window_height as i32,
-        });
-        let view_bottom_left_world: WorldPoint = (&view_bottom_left_screen).into();
-        let view_bottom_right_screen: ScreenPoint = self.from_viewport_point(&ViewportPoint {
-            x: self.window_width as i32,
-            y: self.window_height as i32,
-        });
-        let view_bottom_right_world: WorldPoint = (&view_bottom_right_screen).into();
+        let view_top_left_world: WorldPoint =
+            self.compute_world_point(game, ViewportPoint { x: 0, y: 0 });
+        let view_top_right_world: WorldPoint = self.compute_world_point(
+            game,
+            ViewportPoint {
+                x: self.window_width as i32,
+                y: 0,
+            },
+        );
+        let view_bottom_left_world: WorldPoint = self.compute_world_point(
+            game,
+            ViewportPoint {
+                x: 0,
+                y: self.window_height as i32,
+            },
+        );
+        let view_bottom_right_world: WorldPoint = self.compute_world_point(
+            game,
+            ViewportPoint {
+                x: self.window_width as i32,
+                y: self.window_height as i32,
+            },
+        );
 
         // Rather than any complex math, we can just draw a recangular bounding box around our region.
         // This will capture more region than necessary but is fast and guarantees our viewport is a subregion.
@@ -288,7 +304,7 @@ impl Viewport {
                         LandType::Land => Color::from(COLOR_LAND),
                     };
 
-                    fill_block(canvas, &self, &game.board, x as i32, y as i32, tile_color)?;
+                    fill_block(canvas, &self, &game, x as i32, y as i32, tile_color)?;
                 }
 
                 // Map the board vertex to a ViewportPoint and draw the point.
@@ -296,10 +312,11 @@ impl Viewport {
                 let x = x as f32;
                 let y = y as f32;
 
-                let point = WorldPoint { x, y, h };
+                let world_point = WorldPoint { x, y, h };
+                let viewport_point = self.compute_viewport_point(game, world_point);
 
-                let view_point = ScreenPoint::from(&point).to_render(&self);
-                canvas.draw_point(view_point)?;
+                let point: rect::Point = viewport_point.into();
+                canvas.draw_point(point)?;
             }
         }
 
@@ -315,7 +332,7 @@ impl Viewport {
                             fill_block(
                                 canvas,
                                 &self,
-                                &game.board,
+                                &game,
                                 block.x as i32 + x as i32,
                                 block.y as i32 + y as i32,
                                 Color::from(COLOR_HIGHLIGHT_BLOCK),
@@ -329,7 +346,7 @@ impl Viewport {
                         for x in
                             (block.x as i32 - radius as i32)..(block.x as i32 + radius as i32 + 1)
                         {
-                            draw_vertex(canvas, &self, &game.board, x, y, Color::from(COLOR_WHITE));
+                            draw_vertex(canvas, &self, &game, x, y, Color::from(COLOR_WHITE));
                         }
                     }
                 }
@@ -345,7 +362,7 @@ impl Viewport {
 fn draw_vertex(
     canvas: &mut Canvas<Window>,
     viewport: &Viewport,
-    board: &GameBoard,
+    game: &GameState,
     x: i32,
     y: i32,
     color: Color,
@@ -356,17 +373,26 @@ fn draw_vertex(
     let w_left = y as f32;
 
     let mut h: u8 = 0;
-    if x >= 0 && y >= 0 && board.vertex_on_board(Vertex { x: x as u32, y: y as u32 }) {
-        h = board.vertex_height(Vertex {
+    if x >= 0
+        && y >= 0
+        && game.board.vertex_on_board(Vertex {
+            x: x as u32,
+            y: y as u32,
+        })
+    {
+        h = game.board.vertex_height(Vertex {
             x: x as u32,
             y: y as u32,
         });
     }
-    let v_top_left = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
-        x: w_top,
-        y: w_left,
-        h,
-    }));
+    let v_top_left = viewport.compute_viewport_point(
+        game,
+        WorldPoint {
+            x: w_top,
+            y: w_left,
+            h,
+        },
+    );
 
     canvas.set_draw_color(color);
     canvas.draw_point(rect::Point::new(v_top_left.x, v_top_left.y));
@@ -379,7 +405,7 @@ fn draw_vertex(
 fn fill_block(
     canvas: &mut Canvas<Window>,
     viewport: &Viewport,
-    board: &GameBoard,
+    game: &GameState,
     x: i32,
     y: i32,
     color: Color,
@@ -392,53 +418,89 @@ fn fill_block(
     let w_right = (y + 1) as f32;
 
     let mut h: u8 = 0;
-    if x >= 0 && y >= 0 && board.vertex_on_board(Vertex { x: x as u32, y: y as u32 }) {
-        h = board.vertex_height(Vertex {
+    if x >= 0
+        && y >= 0
+        && game.board.vertex_on_board(Vertex {
+            x: x as u32,
+            y: y as u32,
+        })
+    {
+        h = game.board.vertex_height(Vertex {
             x: x as u32,
             y: y as u32,
         });
     }
-    let v_top_left = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
-        x: w_top,
-        y: w_left,
-        h,
-    }));
+    let v_top_left = viewport.compute_viewport_point(
+        game,
+        WorldPoint {
+            x: w_top,
+            y: w_left,
+            h,
+        },
+    );
     let mut h: u8 = 0;
-    if x >= 0 && y + 1 >= 0 && board.vertex_on_board(Vertex { x: x as u32, y: (y + 1) as u32 }) {
-        h = board.vertex_height(Vertex {
+    if x >= 0
+        && y + 1 >= 0
+        && game.board.vertex_on_board(Vertex {
+            x: x as u32,
+            y: (y + 1) as u32,
+        })
+    {
+        h = game.board.vertex_height(Vertex {
             x: x as u32,
             y: (y + 1) as u32,
         });
     }
-    let v_top_right = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
-        x: w_top,
-        y: w_right,
-        h,
-    }));
+    let v_top_right = viewport.compute_viewport_point(
+        game,
+        WorldPoint {
+            x: w_top,
+            y: w_right,
+            h,
+        },
+    );
     let mut h: u8 = 0;
-    if x + 1 >= 0 && y >= 0 && board.vertex_on_board(Vertex { x: (x + 1) as u32, y: y as u32 }) {
-        h = board.vertex_height(Vertex {
+    if x + 1 >= 0
+        && y >= 0
+        && game.board.vertex_on_board(Vertex {
+            x: (x + 1) as u32,
+            y: y as u32,
+        })
+    {
+        h = game.board.vertex_height(Vertex {
             x: (x + 1) as u32,
             y: y as u32,
         });
     }
-    let v_bottom_left = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
-        x: w_bottom,
-        y: w_left,
-        h,
-    }));
+    let v_bottom_left = viewport.compute_viewport_point(
+        game,
+        WorldPoint {
+            x: w_bottom,
+            y: w_left,
+            h,
+        },
+    );
     let mut h: u8 = 0;
-    if x + 1 >= 0 && y + 1 >= 0 && board.vertex_on_board(Vertex { x: (x + 1) as u32, y: (y + 1) as u32 }) {
-        h = board.vertex_height(Vertex {
+    if x + 1 >= 0
+        && y + 1 >= 0
+        && game.board.vertex_on_board(Vertex {
+            x: (x + 1) as u32,
+            y: (y + 1) as u32,
+        })
+    {
+        h = game.board.vertex_height(Vertex {
             x: (x + 1) as u32,
             y: (y + 1) as u32,
         });
     }
-    let v_bottom_right = viewport.to_viewport_point(&ScreenPoint::from(&WorldPoint {
-        x: w_bottom,
-        y: w_right,
-        h,
-    }));
+    let v_bottom_right = viewport.compute_viewport_point(
+        game,
+        WorldPoint {
+            x: w_bottom,
+            y: w_right,
+            h,
+        },
+    );
 
     let lines = vec![
         rect::Point::new(v_top_left.x, v_top_left.y),

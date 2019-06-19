@@ -8,6 +8,37 @@ pub type VertexHeight = u8;
 pub type VertexPosition = u32;
 pub type BlockPosition = u32;
 
+pub struct GameState {
+    pub board: GameBoard,
+    pub focal_point: Vertex,
+    pub player_mode: PlayerMode,
+    pub highlighted_block: Option<Block>,
+}
+
+impl GameState {
+    pub fn new() -> Self {
+        Self {
+            board: GameBoard::new(),
+            focal_point: Vertex { x: 10, y: 20 },
+            player_mode: PlayerMode::Focus,
+            // player_mode: PlayerMode::PlaceObject { obj: Object::Forest, orientation: Direction::North },
+            // player_mode: PlayerMode::RaiseLower { radius: 0 },
+            highlighted_block: None,
+        }
+    }
+
+    pub fn selection_mode(&self) -> SelectionMode {
+        match self.player_mode {
+            PlayerMode::Focus => SelectionMode::None,
+            PlayerMode::PlaceObject { .. } => {
+                // TODO (toby): Properly determine object size.
+                SelectionMode::Blocks { w: 5, h: 3 }
+            }
+            PlayerMode::RaiseLower { radius } => SelectionMode::Vertex { radius },
+        }
+    }
+}
+
 pub struct GameBoard {
     vertices: [VertexHeight; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
     objects: Vec<ObjectPlacement>,
@@ -103,6 +134,12 @@ pub struct Block {
     pub y: BlockPosition,
 }
 
+impl From<Vertex> for Block {
+    fn from(v: Vertex) -> Self {
+        Self { x: v.x, y: v.y }
+    }
+}
+
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub struct Vertex {
     pub x: VertexPosition,
@@ -112,6 +149,12 @@ pub struct Vertex {
 impl Vertex {
     pub fn is_edge_vertex(&self) -> bool {
         self.x == 0 || self.y == 0 || self.x == BOARD_WIDTH + 1 || self.y == BOARD_HEIGHT + 1
+    }
+}
+
+impl From<Block> for Vertex {
+    fn from(b: Block) -> Self {
+        Self { x: b.x, y: b.y }
     }
 }
 
@@ -155,33 +198,4 @@ pub enum SelectionMode {
     None,
     Vertex { radius: u8 },
     Blocks { w: u8, h: u8 },
-}
-
-pub struct GameState {
-    pub board: GameBoard,
-    pub player_mode: PlayerMode,
-    pub highlighted_block: Option<Block>,
-}
-
-impl GameState {
-    pub fn new() -> Self {
-        Self {
-            board: GameBoard::new(),
-            // player_mode: PlayerMode::Focus,
-            // player_mode: PlayerMode::PlaceObject { obj: Object::Forest, orientation: Direction::North },
-            player_mode: PlayerMode::RaiseLower { radius: 0 },
-            highlighted_block: None,
-        }
-    }
-
-    pub fn selection_mode(&self) -> SelectionMode {
-        match self.player_mode {
-            PlayerMode::Focus => SelectionMode::None,
-            PlayerMode::PlaceObject { .. } => {
-                // TODO (toby): Properly determine object size.
-                SelectionMode::Blocks { w: 5, h: 3 }
-            }
-            PlayerMode::RaiseLower { radius } => SelectionMode::Vertex { radius },
-        }
-    }
 }

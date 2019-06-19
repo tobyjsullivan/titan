@@ -4,14 +4,7 @@ use crate::state::{GameBoard, GameState, Vertex};
 const MIN_HEIGHT: u8 = 0;
 const MAX_HEIGHT: u8 = 6;
 
-pub fn apply(game: &mut GameState, action: GameAction) {
-    match action {
-        GameAction::LowerTerrain => lower_terrain(game),
-        GameAction::RaiseTerrain => raise_terrain(game),
-    }
-}
-
-fn lower_terrain(game: &mut GameState) {
+pub fn apply_lower_terrain(game: &mut GameState) {
     if let Some(block) = game.highlighted_block {
         let v = Vertex {
             x: block.x,
@@ -20,6 +13,19 @@ fn lower_terrain(game: &mut GameState) {
         match lower_vertex(&mut game.board, v) {
             Ok(()) => println!("Vertex lowered."),
             Err(()) => println!("Lowering failed."),
+        }
+    }
+}
+
+pub fn apply_raise_terrain(game: &mut GameState) {
+    if let Some(block) = game.highlighted_block {
+        let v = Vertex {
+            x: block.x,
+            y: block.y,
+        };
+        match raise_vertex(&mut game.board, v) {
+            Ok(()) => println!("Vertex raised."),
+            Err(()) => println!("Raising failed."),
         }
     }
 }
@@ -56,19 +62,6 @@ fn lower_vertex(mut board: &mut GameBoard, vertex: Vertex) -> Result<(), ()> {
 
     board.set_vertex_height(vertex, prior_height - 1);
     Ok(())
-}
-
-fn raise_terrain(game: &mut GameState) {
-    if let Some(block) = game.highlighted_block {
-        let v = Vertex {
-            x: block.x,
-            y: block.y,
-        };
-        match raise_vertex(&mut game.board, v) {
-            Ok(()) => println!("Vertex raised."),
-            Err(()) => println!("Raising failed."),
-        }
-    }
 }
 
 fn raise_vertex(mut board: &mut GameBoard, vertex: Vertex) -> Result<(), ()> {
