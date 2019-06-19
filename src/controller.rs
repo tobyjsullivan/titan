@@ -1,18 +1,51 @@
 use crate::action::GameAction;
 use crate::state::GameState;
+use crate::view::sidebar::Sidebar;
 use crate::view::viewport::Viewport;
 
 #[derive(PartialEq, Clone, Copy)]
+pub enum WindowPanel {
+    Sidebar,
+    Viewport,
+}
+
+#[derive(PartialEq, Clone, Copy)]
 pub enum PlayerAction {
-    WindowLeftClick { x: i32, y: i32 },
-    WindowRightClick { x: i32, y: i32 },
+    CursorMove { panel: WindowPanel, x: i32, y: i32 },
+    WindowLeftClick { panel: WindowPanel, x: i32, y: i32 },
+    WindowRightClick { panel: WindowPanel, x: i32, y: i32 },
 }
 
 pub fn map_player_action(
+    sidebar: &Sidebar,
     viewport: &Viewport,
     game: &GameState,
     player_action: PlayerAction,
 ) -> Option<GameAction> {
-    // TODO (toby): Handle clicks and actions on components other than the viewport.
-    viewport.map_player_action(game, player_action)
+    match player_action {
+        cursor_move @ PlayerAction::CursorMove {
+            panel: WindowPanel::Sidebar,
+            ..
+        } => sidebar.map_player_action(game, cursor_move),
+        click @ PlayerAction::WindowLeftClick {
+            panel: WindowPanel::Sidebar,
+            ..
+        } => sidebar.map_player_action(game, click),
+        click @ PlayerAction::WindowRightClick {
+            panel: WindowPanel::Sidebar,
+            ..
+        } => sidebar.map_player_action(game, click),
+        cursor_move @ PlayerAction::CursorMove {
+            panel: WindowPanel::Viewport,
+            ..
+        } => viewport.map_player_action(game, cursor_move),
+        click @ PlayerAction::WindowLeftClick {
+            panel: WindowPanel::Viewport,
+            ..
+        } => viewport.map_player_action(game, click),
+        click @ PlayerAction::WindowRightClick {
+            panel: WindowPanel::Viewport,
+            ..
+        } => viewport.map_player_action(game, click),
+    }
 }

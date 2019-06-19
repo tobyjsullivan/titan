@@ -11,15 +11,14 @@ use sdl2::video::Window;
 use std::f32::consts::PI;
 use std::time::Instant;
 
+use super::{COLOR_BLACK, COLOR_WHITE};
+
 const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
 
 const HEIGHT_UNIT_OFFSET: u32 = 5;
 
 const GRID_SCALE: f32 = 20.0;
 
-const COLOR_WHITE: (u8, u8, u8) = (255, 255, 255);
-const COLOR_DARK_GRAY: (u8, u8, u8) = (37, 37, 37);
-const COLOR_BLACK: (u8, u8, u8) = (0, 0, 0);
 const COLOR_HIGHLIGHT_BLOCK: (u8, u8, u8, u8) = (255, 255, 255, 150);
 const COLOR_WATER: (u8, u8, u8) = (53, 117, 189);
 const COLOR_LAND: (u8, u8, u8) = (0, 200, 0);
@@ -27,15 +26,15 @@ const COLOR_LAND: (u8, u8, u8) = (0, 200, 0);
 pub struct Viewport {
     window_width: u32,
     window_height: u32,
-    // TODO (toby): scale: f32,
-    // TODO (toby): rotation
+    offset_left: u32,
 }
 
 impl Viewport {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(width: u32, height: u32, offset_left: u32) -> Self {
         Self {
             window_width: width,
             window_height: height,
+            offset_left,
         }
     }
 
@@ -89,7 +88,13 @@ impl Viewport {
     }
 
     pub fn get_block_under_cursor(&self, game: &GameState, x: i32, y: i32) -> Option<Block> {
-        let world_point = self.compute_world_point(game, ViewportPoint { x, y });
+        let world_point = self.compute_world_point(
+            game,
+            ViewportPoint {
+                x: x - self.offset_left as i32,
+                y,
+            },
+        );
 
         let mut cur_block_x = world_point.x as i32;
         let mut cur_block_y = world_point.y as i32;
@@ -110,12 +115,15 @@ impl Viewport {
         game: &GameState,
         player_action: PlayerAction,
     ) -> Option<GameAction> {
-        match (&game.player_mode, &player_action) {
-            (PlayerMode::Focus, PlayerAction::WindowLeftClick { .. }) => Some(GameAction::Focus),
-            (PlayerMode::RaiseLower { .. }, PlayerAction::WindowLeftClick { .. }) => {
+        match (player_action, &game.player_mode) {
+            (PlayerAction::CursorMove { x, y, .. }, _) => Some(GameAction::Hover {
+                block: self.get_block_under_cursor(&game, x, y),
+            }),
+            (PlayerAction::WindowLeftClick { .. }, PlayerMode::Focus) => Some(GameAction::Focus),
+            (PlayerAction::WindowLeftClick { .. }, PlayerMode::RaiseLower { .. }) => {
                 Some(GameAction::RaiseTerrain)
             }
-            (PlayerMode::RaiseLower { .. }, PlayerAction::WindowRightClick { .. }) => {
+            (PlayerAction::WindowRightClick { .. }, PlayerMode::RaiseLower { .. }) => {
                 Some(GameAction::LowerTerrain)
             }
             _ => None,
@@ -123,9 +131,6 @@ impl Viewport {
     }
 
     pub fn render(&self, canvas: &mut Canvas<Window>, game: &GameState) -> Result<(), String> {
-        canvas.set_draw_color(COLOR_DARK_GRAY);
-        canvas.clear();
-
         canvas.set_draw_color(COLOR_BLACK);
 
         // Get the bounding corners of the view port in terms of world points.
@@ -221,8 +226,7 @@ impl Viewport {
                 let world_point = WorldPoint { x, y, h };
                 let viewport_point = self.compute_viewport_point(game, world_point);
 
-                let point: rect::Point = viewport_point.into();
-                canvas.draw_point(point)?;
+                canvas.draw_point(viewport_point.to_renderable(self))?;
             }
         }
 
@@ -265,15 +269,15 @@ impl Viewport {
     }
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 struct ViewportPoint {
     pub x: i32,
     pub y: i32,
 }
 
-impl Into<rect::Point> for ViewportPoint {
-    fn into(self) -> rect::Point {
-        rect::Point::new(self.x, self.y)
+impl ViewportPoint {
+    fn to_renderable(&self, viewport: &Viewport) -> rect::Point {
+        rect::Point::new(self.x + viewport.offset_left as i32, self.y)
     }
 }
 
@@ -395,7 +399,7 @@ fn draw_vertex(
     );
 
     canvas.set_draw_color(color);
-    canvas.draw_point(rect::Point::new(v_top_left.x, v_top_left.y))?;
+    canvas.draw_point(v_top_left.to_renderable(viewport))?;
 
     canvas.set_draw_color(prior_color);
 
@@ -503,11 +507,11 @@ fn fill_block(
     );
 
     let lines = vec![
-        rect::Point::new(v_top_left.x, v_top_left.y),
-        rect::Point::new(v_top_right.x, v_top_right.y),
-        rect::Point::new(v_bottom_right.x, v_bottom_right.y),
-        rect::Point::new(v_bottom_left.x, v_bottom_left.y),
-        rect::Point::new(v_top_left.x, v_top_left.y),
+        v_top_left.to_renderable(viewport),
+        v_top_right.to_renderable(viewport),
+        v_bottom_right.to_renderable(viewport),
+        v_bottom_left.to_renderable(viewport),
+        v_top_left.to_renderable(viewport),
     ];
 
     canvas.set_draw_color(color);

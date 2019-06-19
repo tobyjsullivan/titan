@@ -20,8 +20,11 @@ impl GameState {
         Self {
             board: GameBoard::new(),
             focal_point: Vertex { x: 10, y: 20 },
-            player_mode: PlayerMode::Focus,
-            // player_mode: PlayerMode::PlaceObject { obj: Object::Forest, orientation: Direction::North },
+            // player_mode: PlayerMode::Focus,
+            player_mode: PlayerMode::PlaceObject {
+                obj: Object::Forest,
+                orientation: Direction::North,
+            },
             // player_mode: PlayerMode::RaiseLower { radius: 0 },
             highlighted_block: None,
         }
