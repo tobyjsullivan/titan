@@ -252,7 +252,7 @@ impl Viewport {
                         for x in
                             (block.x as i32 - radius as i32)..(block.x as i32 + radius as i32 + 1)
                         {
-                            draw_vertex(canvas, &self, &game, x, y, Color::from(COLOR_WHITE));
+                            draw_vertex(canvas, &self, &game, x, y, Color::from(COLOR_WHITE))?;
                         }
                     }
                 }
@@ -395,7 +395,7 @@ fn draw_vertex(
     );
 
     canvas.set_draw_color(color);
-    canvas.draw_point(rect::Point::new(v_top_left.x, v_top_left.y));
+    canvas.draw_point(rect::Point::new(v_top_left.x, v_top_left.y))?;
 
     canvas.set_draw_color(prior_color);
 

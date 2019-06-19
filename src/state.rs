@@ -95,7 +95,7 @@ impl GameBoard {
     }
 
     pub fn vertex_on_board(&self, v: Vertex) -> bool {
-        v.x >= 0 && v.x <= BOARD_WIDTH && v.y >= 0 && v.y <= BOARD_HEIGHT
+        v.x <= BOARD_WIDTH && v.y <= BOARD_HEIGHT
     }
 
     fn vertex_index(v: Vertex) -> usize {
