@@ -1,6 +1,6 @@
 use crate::action::GameAction;
 use crate::state::GameState;
-use crate::view::Viewport;
+use crate::view::viewport::Viewport;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum PlayerAction {

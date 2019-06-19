@@ -12,7 +12,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use state::{GameState, PlayerMode};
-use view::Viewport;
+use view::viewport::Viewport;
 
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;

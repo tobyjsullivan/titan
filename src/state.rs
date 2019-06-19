@@ -51,7 +51,7 @@ impl GameBoard {
             objects: Vec::new(),
         };
 
-        // Set a couple vertices to WATER+1
+        // Set a few vertices to WATER+1.
         for &v in [
             Self::vertex_index(Vertex { x: 5, y: 3 }),
             Self::vertex_index(Vertex { x: 5, y: 4 }),
