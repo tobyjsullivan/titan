@@ -12,7 +12,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use state::{GameState, PlayerMode};
-use view::{Viewport, ViewportPoint};
+use view::Viewport;
 
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
@@ -51,9 +51,6 @@ fn main() -> Result<(), String> {
                 Event::MouseButtonDown {
                     x, y, mouse_btn, ..
                 } => {
-                    let viewport_point = ViewportPoint { x, y };
-                    println!("Click! View: {:?}", viewport_point);
-
                     let player_action = match mouse_btn {
                         MouseButton::Left => Some(PlayerAction::WindowLeftClick { x, y }),
                         MouseButton::Right => Some(PlayerAction::WindowRightClick { x, y }),

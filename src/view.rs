@@ -24,100 +24,6 @@ const COLOR_HIGHLIGHT_BLOCK: (u8, u8, u8, u8) = (255, 255, 255, 150);
 const COLOR_WATER: (u8, u8, u8) = (53, 117, 189);
 const COLOR_LAND: (u8, u8, u8) = (0, 200, 0);
 
-#[derive(Debug)]
-pub struct ScreenPoint {
-    x: i32,
-    y: i32,
-}
-
-impl ScreenPoint {
-    ///  _                _
-    /// |                  |
-    /// |  cos Θ   -cos Θ  |
-    /// |                  |
-    /// |  sin Θ    sin Θ  |
-    /// |_                _|
-    ///
-    fn transform(x: f32, y: f32, h: u8) -> (f32, f32) {
-        // TODO (toby): Scale these properly.
-        let x = x * GRID_SCALE;
-        let y = y * GRID_SCALE;
-
-        let out_x = (x - y) * ISO_ANGLE_RADS.cos();
-        let mut out_y = (x + y) * ISO_ANGLE_RADS.sin();
-
-        // Apply height transform.
-        out_y -= h as f32 * HEIGHT_UNIT_OFFSET as f32;
-
-        (out_x, out_y)
-    }
-}
-
-impl From<&WorldPoint> for ScreenPoint {
-    fn from(world_point: &WorldPoint) -> Self {
-        let transformed = Self::transform(world_point.x, world_point.y, world_point.h);
-
-        ScreenPoint {
-            x: transformed.0 as i32,
-            y: transformed.1 as i32,
-        }
-    }
-}
-
-/// Represents a point on the game world surface.
-/// The surface is a continuous plane, hence the use of floating points for locations.
-/// Within this surface, however, is a unit grid system.
-/// The units correspond to integer values, for example (1.0, 3.0).
-/// Most world objects fill NxM units, for some integers N and M, and are positioned directly on grid edges.
-#[derive(Debug)]
-pub struct WorldPoint {
-    x: f32,
-    y: f32,
-    h: u8,
-}
-
-impl WorldPoint {
-    ///  _                         _
-    /// |                           |
-    /// | 1/(2cos Θ)    1/(2sin Θ)  |
-    /// |                           |
-    /// | -1/(2cos Θ)   1/(2sin Θ)  |
-    /// |_                         _|
-    ///
-    fn inverse_transform(x: f32, y: f32) -> (f32, f32) {
-        let out_x = x / (2.0 * ISO_ANGLE_RADS.cos()) + y / (2.0 * ISO_ANGLE_RADS.sin());
-        let out_y = -x / (2.0 * ISO_ANGLE_RADS.cos()) + y / (2.0 * ISO_ANGLE_RADS.sin());
-
-        // TODO (toby): Scale these properly.
-        (out_x / GRID_SCALE, out_y / GRID_SCALE)
-    }
-}
-
-impl From<&ScreenPoint> for WorldPoint {
-    fn from(screen_point: &ScreenPoint) -> Self {
-        // Apply the inverse transform to get world point.
-        let inverse = Self::inverse_transform(screen_point.x as f32, screen_point.y as f32);
-
-        Self {
-            x: inverse.0,
-            y: inverse.1,
-            h: 0, // TODO (toby): is it possible to infer actual height?
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ViewportPoint {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Into<rect::Point> for ViewportPoint {
-    fn into(self) -> rect::Point {
-        rect::Point::new(self.x, self.y)
-    }
-}
-
 pub struct Viewport {
     window_width: u32,
     window_height: u32,
@@ -356,6 +262,100 @@ impl Viewport {
         // println!("Compute and draw: {:?}", draw_begin.elapsed());
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+struct ViewportPoint {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl Into<rect::Point> for ViewportPoint {
+    fn into(self) -> rect::Point {
+        rect::Point::new(self.x, self.y)
+    }
+}
+
+/// Represents a point on the game world surface.
+/// The surface is a continuous plane, hence the use of floating points for locations.
+/// Within this surface, however, is a unit grid system.
+/// The units correspond to integer values, for example (1.0, 3.0).
+/// Most world objects fill NxM units, for some integers N and M, and are positioned directly on grid edges.
+#[derive(Debug)]
+struct WorldPoint {
+    x: f32,
+    y: f32,
+    h: u8,
+}
+
+impl WorldPoint {
+    ///  _                         _
+    /// |                           |
+    /// | 1/(2cos Θ)    1/(2sin Θ)  |
+    /// |                           |
+    /// | -1/(2cos Θ)   1/(2sin Θ)  |
+    /// |_                         _|
+    ///
+    fn inverse_transform(x: f32, y: f32) -> (f32, f32) {
+        let out_x = x / (2.0 * ISO_ANGLE_RADS.cos()) + y / (2.0 * ISO_ANGLE_RADS.sin());
+        let out_y = -x / (2.0 * ISO_ANGLE_RADS.cos()) + y / (2.0 * ISO_ANGLE_RADS.sin());
+
+        // TODO (toby): Scale these properly.
+        (out_x / GRID_SCALE, out_y / GRID_SCALE)
+    }
+}
+
+impl From<&ScreenPoint> for WorldPoint {
+    fn from(screen_point: &ScreenPoint) -> Self {
+        // Apply the inverse transform to get world point.
+        let inverse = Self::inverse_transform(screen_point.x as f32, screen_point.y as f32);
+
+        Self {
+            x: inverse.0,
+            y: inverse.1,
+            h: 0, // TODO (toby): is it possible to infer actual height?
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ScreenPoint {
+    x: i32,
+    y: i32,
+}
+
+impl ScreenPoint {
+    ///  _                _
+    /// |                  |
+    /// |  cos Θ   -cos Θ  |
+    /// |                  |
+    /// |  sin Θ    sin Θ  |
+    /// |_                _|
+    ///
+    fn transform(x: f32, y: f32, h: u8) -> (f32, f32) {
+        // TODO (toby): Scale these properly.
+        let x = x * GRID_SCALE;
+        let y = y * GRID_SCALE;
+
+        let out_x = (x - y) * ISO_ANGLE_RADS.cos();
+        let mut out_y = (x + y) * ISO_ANGLE_RADS.sin();
+
+        // Apply height transform.
+        out_y -= h as f32 * HEIGHT_UNIT_OFFSET as f32;
+
+        (out_x, out_y)
+    }
+}
+
+impl From<&WorldPoint> for ScreenPoint {
+    fn from(world_point: &WorldPoint) -> Self {
+        let transformed = Self::transform(world_point.x, world_point.y, world_point.h);
+
+        ScreenPoint {
+            x: transformed.0 as i32,
+            y: transformed.1 as i32,
+        }
     }
 }
 
