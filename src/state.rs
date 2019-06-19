@@ -63,6 +63,10 @@ impl GameBoard {
         self.vertices[Self::vertex_index(v)]
     }
 
+    pub fn set_vertex_height(&mut self, v: Vertex, height: u8) {
+        self.vertices[Self::vertex_index(v)] = height;
+    }
+
     pub fn block_land_type(&self, x: VertexPosition, y: VertexPosition) -> LandType {
         for &h in [
             self.vertex_height(Vertex { x, y }),
@@ -81,11 +85,13 @@ impl GameBoard {
     }
 }
 
+#[derive(PartialEq, Copy, Clone)]
 pub struct Block {
     pub x: BlockPosition,
     pub y: BlockPosition,
 }
 
+#[derive(PartialEq, Copy, Clone)]
 pub struct Vertex {
     pub x: VertexPosition,
     pub y: VertexPosition,
