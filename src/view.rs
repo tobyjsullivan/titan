@@ -1,8 +1,7 @@
 use crate::action::GameAction;
 use crate::controller::PlayerAction;
 use crate::state::{
-    Block, GameBoard, GameState, LandType, PlayerMode, SelectionMode, Vertex, BOARD_HEIGHT,
-    BOARD_WIDTH, WATER_LEVEL,
+    Block, GameBoard, GameState, LandType, PlayerMode, SelectionMode, Vertex, WATER_LEVEL,
 };
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
@@ -269,19 +268,21 @@ impl Viewport {
         }
 
         let draw_begin = Instant::now();
-        for y in 0..(BOARD_HEIGHT + 1) {
+        let board_width = game.board.width();
+        let board_height = game.board.height();
+        for y in 0..(board_height + 1) {
             // Skip any points outside viewport bounding box.
             if (y as f32) < min_y || (y as f32) > max_y {
                 continue;
             }
 
-            for x in 0..(BOARD_WIDTH + 1) {
+            for x in 0..(board_width + 1) {
                 // Skip any points outside viewport bounding box.
                 if (x as f32) < min_x || (x as f32) > max_x {
                     continue;
                 }
 
-                if x < BOARD_WIDTH && y < BOARD_HEIGHT {
+                if x < board_width && y < board_height {
                     let mut tile_color = match game.board.block_land_type(x, y) {
                         LandType::Water => Color::from(COLOR_WATER),
                         LandType::Land => Color::from(COLOR_LAND),
@@ -355,7 +356,7 @@ fn draw_vertex(
     let w_left = y as f32;
 
     let mut h: u8 = 0;
-    if point_on_board(x, y) {
+    if x >= 0 && y >= 0 && board.vertex_on_board(Vertex { x: x as u32, y: y as u32 }) {
         h = board.vertex_height(Vertex {
             x: x as u32,
             y: y as u32,
@@ -391,7 +392,7 @@ fn fill_block(
     let w_right = (y + 1) as f32;
 
     let mut h: u8 = 0;
-    if point_on_board(x, y) {
+    if x >= 0 && y >= 0 && board.vertex_on_board(Vertex { x: x as u32, y: y as u32 }) {
         h = board.vertex_height(Vertex {
             x: x as u32,
             y: y as u32,
@@ -403,7 +404,7 @@ fn fill_block(
         h,
     }));
     let mut h: u8 = 0;
-    if point_on_board(x, y + 1) {
+    if x >= 0 && y + 1 >= 0 && board.vertex_on_board(Vertex { x: x as u32, y: (y + 1) as u32 }) {
         h = board.vertex_height(Vertex {
             x: x as u32,
             y: (y + 1) as u32,
@@ -415,7 +416,7 @@ fn fill_block(
         h,
     }));
     let mut h: u8 = 0;
-    if point_on_board(x + 1, y) {
+    if x + 1 >= 0 && y >= 0 && board.vertex_on_board(Vertex { x: (x + 1) as u32, y: y as u32 }) {
         h = board.vertex_height(Vertex {
             x: (x + 1) as u32,
             y: y as u32,
@@ -427,7 +428,7 @@ fn fill_block(
         h,
     }));
     let mut h: u8 = 0;
-    if point_on_board(x + 1, y + 1) {
+    if x + 1 >= 0 && y + 1 >= 0 && board.vertex_on_board(Vertex { x: (x + 1) as u32, y: (y + 1) as u32 }) {
         h = board.vertex_height(Vertex {
             x: (x + 1) as u32,
             y: (y + 1) as u32,
@@ -469,8 +470,4 @@ fn fill_block(
     canvas.set_draw_color(prior_color);
 
     Ok(())
-}
-
-fn point_on_board(x: i32, y: i32) -> bool {
-    x >= 0 && x <= BOARD_WIDTH as i32 && y >= 0 && y <= BOARD_HEIGHT as i32
 }

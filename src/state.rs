@@ -1,5 +1,5 @@
-pub const BOARD_WIDTH: u32 = 1000;
-pub const BOARD_HEIGHT: u32 = 1000;
+const BOARD_WIDTH: u32 = 1000;
+const BOARD_HEIGHT: u32 = 1000;
 
 pub const WATER_LEVEL: u8 = 0;
 
@@ -55,6 +55,18 @@ impl GameBoard {
         res
     }
 
+    pub fn width(&self) -> u32 {
+        BOARD_WIDTH
+    }
+
+    pub fn height(&self) -> u32 {
+        BOARD_HEIGHT
+    }
+
+    pub fn vertex_on_board(&self, v: Vertex) -> bool {
+        v.x >= 0 && v.x <= BOARD_WIDTH && v.y >= 0 && v.y <= BOARD_HEIGHT
+    }
+
     fn vertex_index(v: Vertex) -> usize {
         ((v.y * (BOARD_WIDTH + 1)) + v.x) as usize
     }
@@ -91,10 +103,16 @@ pub struct Block {
     pub y: BlockPosition,
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub struct Vertex {
     pub x: VertexPosition,
     pub y: VertexPosition,
+}
+
+impl Vertex {
+    pub fn is_edge_vertex(&self) -> bool {
+        self.x == 0 || self.y == 0 || self.x == BOARD_WIDTH + 1 || self.y == BOARD_HEIGHT + 1
+    }
 }
 
 pub enum LandType {
