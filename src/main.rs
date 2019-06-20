@@ -34,17 +34,32 @@ fn main() -> Result<(), String> {
     let window = vid_subsystem
         .window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
+        .allow_highdpi()
         .opengl()
         .build()
         .map_err(|e| e.to_string())?;
+
+    let (drawable_x, drawable_y) = window.drawable_size();
+    let scale_x = drawable_x / WINDOW_WIDTH;
+    let scale_y = drawable_y / WINDOW_HEIGHT;
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_ctx.event_pump()?;
 
-    let mut viewport = Viewport::new(WINDOW_WIDTH - SIDEBAR_WIDTH, WINDOW_HEIGHT, SIDEBAR_WIDTH);
-    let mut sidebar = Sidebar::new(texture_creator, SIDEBAR_WIDTH, WINDOW_HEIGHT);
+    let mut viewport = Viewport::new(
+        WINDOW_WIDTH * scale_x - SIDEBAR_WIDTH * scale_x,
+        WINDOW_HEIGHT * scale_y,
+        SIDEBAR_WIDTH * scale_x,
+    );
+    let mut sidebar = Sidebar::new(
+        texture_creator,
+        SIDEBAR_WIDTH * scale_x,
+        WINDOW_HEIGHT * scale_y,
+        scale_x,
+        scale_y,
+    );
     let mut game = GameState::new();
 
     let update_interval = Duration::new(0, 1_000_000_000 / UPDATES_PER_SECOND);
@@ -64,8 +79,8 @@ fn main() -> Result<(), String> {
                 Event::MouseMotion { x, y, .. } => {
                     let player_action = PlayerAction::CursorMove {
                         panel: window_panel(x, y),
-                        x,
-                        y,
+                        x: x * scale_x as i32,
+                        y: y * scale_y as i32,
                     };
                     player_actions.push(player_action);
                 }
@@ -75,13 +90,13 @@ fn main() -> Result<(), String> {
                     let player_action = match mouse_btn {
                         MouseButton::Left => Some(PlayerAction::WindowLeftClick {
                             panel: window_panel(x, y),
-                            x,
-                            y,
+                            x: x * scale_x as i32,
+                            y: y * scale_y as i32,
                         }),
                         MouseButton::Right => Some(PlayerAction::WindowRightClick {
                             panel: window_panel(x, y),
-                            x,
-                            y,
+                            x: x * scale_x as i32,
+                            y: y * scale_y as i32,
                         }),
                         _ => None,
                     };

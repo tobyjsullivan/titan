@@ -14,14 +14,24 @@ const BUTTON_WIDTH: u32 = 32;
 const BUTTON_HEIGHT: u32 = 32;
 
 pub struct Sidebar {
+    scale_x: u32,
+    scale_y: u32,
     width: u32,
     height: u32,
     button_textures: [Texture; 15],
 }
 
 impl Sidebar {
-    pub fn new<T>(texture_creator: TextureCreator<T>, width: u32, height: u32) -> Self {
+    pub fn new<T>(
+        texture_creator: TextureCreator<T>,
+        width: u32,
+        height: u32,
+        scale_x: u32,
+        scale_y: u32,
+    ) -> Self {
         Self {
+            scale_x,
+            scale_y,
             width,
             height,
             button_textures: [
@@ -91,8 +101,9 @@ impl Sidebar {
 
     fn button_under_cursor(&self, x: i32, y: i32) -> Option<SidebarButton> {
         match (
-            x / BUTTON_WIDTH as i32,
-            (y - BUTTON_GRID_OFFSET_Y as i32) / BUTTON_HEIGHT as i32,
+            x / (BUTTON_WIDTH * self.scale_x) as i32,
+            (y - (BUTTON_GRID_OFFSET_Y * self.scale_y) as i32)
+                / (BUTTON_HEIGHT * self.scale_y) as i32,
         ) {
             (0, 0) => Some(SidebarButton::Close),
             (1, 0) => Some(SidebarButton::Save),
@@ -125,10 +136,11 @@ impl Sidebar {
             &self.button_textures[button_texture_index(button)],
             None,
             Some(Rect::new(
-                (button_column(button) * BUTTON_WIDTH) as i32,
-                (button_row(button) * BUTTON_HEIGHT + BUTTON_GRID_OFFSET_Y) as i32,
-                BUTTON_WIDTH,
-                BUTTON_HEIGHT,
+                (button_column(button) * BUTTON_WIDTH * self.scale_x) as i32,
+                (button_row(button) * BUTTON_HEIGHT * self.scale_y
+                    + BUTTON_GRID_OFFSET_Y * self.scale_y) as i32,
+                BUTTON_WIDTH * self.scale_x,
+                BUTTON_HEIGHT * self.scale_y,
             )),
         )
     }
