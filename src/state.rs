@@ -13,6 +13,7 @@ pub struct GameState {
     pub focal_point: Vertex,
     pub player_mode: PlayerMode,
     pub highlighted_block: Option<Block>,
+    pub highlighted_button: Option<SidebarButton>,
 }
 
 impl GameState {
@@ -27,6 +28,7 @@ impl GameState {
             },
             // player_mode: PlayerMode::RaiseLower { radius: 0 },
             highlighted_block: None,
+            highlighted_button: None,
         }
     }
 
@@ -129,6 +131,24 @@ impl GameBoard {
 
         LandType::Water
     }
+}
+
+pub enum SidebarButton {
+    Close,
+    Save,
+    Music,
+    Graphics,
+    Help,
+    Rotation,
+    Metrics,
+    Finances,
+    News,
+    Info,
+    Navigation,
+    Building,
+    Rail,
+    Demolish,
+    Point,
 }
 
 #[derive(PartialEq, Copy, Clone)]

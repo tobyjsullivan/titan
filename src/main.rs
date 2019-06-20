@@ -108,6 +108,9 @@ fn main() -> Result<(), String> {
                 Some(GameAction::RaiseTerrain) => {
                     systems::terrain::apply_raise_terrain(&mut game);
                 }
+                Some(GameAction::SidebarHover { button }) => {
+                    systems::navigation::apply_sidebar_hover(&mut game, button);
+                }
                 None => {}
             }
         }

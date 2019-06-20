@@ -1,4 +1,4 @@
-use crate::state::{Block, GameState};
+use crate::state::{Block, GameState, SidebarButton};
 
 pub fn apply_focus(game: &mut GameState) {
     if let Some(block) = game.highlighted_block {
@@ -7,5 +7,19 @@ pub fn apply_focus(game: &mut GameState) {
 }
 
 pub fn apply_hover(game: &mut GameState, block: Option<Block>) {
-    game.highlighted_block = block;
+    if let Some(block) = block {
+        game.highlighted_block = Some(block);
+        game.highlighted_button = None;
+    } else {
+        game.highlighted_block = None;
+    }
+}
+
+pub fn apply_sidebar_hover(game: &mut GameState, button: Option<SidebarButton>) {
+    if let Some(button) = button {
+        game.highlighted_block = None;
+        game.highlighted_button = Some(button);
+    } else {
+        game.highlighted_button = None;
+    }
 }
