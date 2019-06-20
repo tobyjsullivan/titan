@@ -40,9 +40,7 @@ impl Sidebar {
                 texture_creator.load_texture("art/magnify_128.png").unwrap(),
                 texture_creator.load_texture("art/factory_128.png").unwrap(),
                 texture_creator.load_texture("art/railway_128.png").unwrap(),
-                texture_creator
-                    .load_texture("art/demolish_128.png")
-                    .unwrap(),
+                texture_creator.load_texture("art/dozer_128.png").unwrap(),
                 texture_creator.load_texture("art/point_128.png").unwrap(),
             ],
         }
