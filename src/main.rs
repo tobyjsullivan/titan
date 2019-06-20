@@ -22,7 +22,7 @@ use view::COLOR_DARK_GRAY;
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
 
-const SIDEBAR_WIDTH: u32 = 200;
+const SIDEBAR_WIDTH: u32 = 160;
 
 const UPDATES_PER_SECOND: u32 = 120;
 const MAX_FRAMES_PER_SECOND: u32 = 60;
@@ -39,11 +39,12 @@ fn main() -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
+    let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_ctx.event_pump()?;
 
     let mut viewport = Viewport::new(WINDOW_WIDTH - SIDEBAR_WIDTH, WINDOW_HEIGHT, SIDEBAR_WIDTH);
-    let mut sidebar = Sidebar::new(SIDEBAR_WIDTH, WINDOW_HEIGHT);
+    let mut sidebar = Sidebar::new(texture_creator, SIDEBAR_WIDTH, WINDOW_HEIGHT);
     let mut game = GameState::new();
 
     let update_interval = Duration::new(0, 1_000_000_000 / UPDATES_PER_SECOND);

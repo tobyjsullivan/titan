@@ -13,11 +13,11 @@ use std::time::Instant;
 
 use super::{COLOR_BLACK, COLOR_WHITE};
 
-const ISO_ANGLE_RADS: f32 = 20.0 / 180.0 * PI;
+const ISO_ANGLE_RADS: f32 = 26.22 / 180.0 * PI;
 
 const HEIGHT_UNIT_OFFSET: u32 = 5;
 
-const GRID_SCALE: f32 = 20.0;
+const GRID_SCALE: f32 = 30.0;
 
 const COLOR_HIGHLIGHT_BLOCK: (u8, u8, u8, u8) = (255, 255, 255, 150);
 const COLOR_WATER: (u8, u8, u8) = (53, 117, 189);
