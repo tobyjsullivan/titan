@@ -1,9 +1,9 @@
-use crate::state::{Block, PlayerMode, SidebarButton};
+use crate::state::{Block, PlayerMode, SidebarMenu};
 
 pub enum GameAction {
     Hover { block: Option<Block> },
-    SidebarHover { button: Option<SidebarButton> },
-    SetPlayerMode { mode: PlayerMode },
+    SidebarHover { button: Option<SidebarMenu> },
+    OpenMenu { menu: SidebarMenu },
     Focus,
     RaiseTerrain,
     LowerTerrain,

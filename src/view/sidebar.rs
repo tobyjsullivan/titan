@@ -1,6 +1,6 @@
 use crate::action::GameAction;
 use crate::controller::{PlayerAction, WindowPanel};
-use crate::state::{Direction, GameState, Object, PlayerMode, SidebarButton};
+use crate::state::{Direction, GameState, Object, PlayerMode, SidebarMenu};
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
@@ -9,6 +9,9 @@ use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::video::Window;
 
 const COLOR_SIDEBAR: (u8, u8, u8) = (132, 132, 123);
+const COLOR_DEPRESSED_BUTTON_OUTLINE: (u8, u8, u8) = (255, 0, 0);
+const COLOR_DEPRESSED_BUTTON_BACKGROUND: (u8, u8, u8, u8) = (255, 255, 255, 100);
+
 const BUTTON_GRID_OFFSET_Y: u32 = 60;
 const BUTTON_WIDTH: u32 = 32;
 const BUTTON_HEIGHT: u32 = 32;
@@ -73,25 +76,10 @@ impl Sidebar {
                 panel: WindowPanel::Sidebar,
                 x,
                 y,
-            } => {
-                match game.highlighted_button {
-                    Some(SidebarButton::Navigation) => Some(GameAction::SetPlayerMode {
-                        mode: PlayerMode::Focus,
-                    }),
-                    Some(SidebarButton::Building) => Some(GameAction::SetPlayerMode {
-                        mode: PlayerMode::PlaceObject {
-                            obj: Object::Forest,
-                            orientation: Direction::North,
-                        },
-                    }),
-                    Some(SidebarButton::Demolish) => Some(GameAction::SetPlayerMode {
-                        mode: PlayerMode::RaiseLower { radius: 0 },
-                    }),
-                    // TODO (toby)
-                    Some(_) => None,
-                    None => None,
-                }
-            }
+            } => match game.highlighted_button {
+                Some(menu) => Some(GameAction::OpenMenu { menu }),
+                None => None,
+            },
             _ => None,
         }
     }
@@ -101,50 +89,50 @@ impl Sidebar {
         canvas.fill_rect(Rect::new(0, 0, self.width, self.height))?;
 
         // Draw buttons
-        self.draw_button(canvas, &SidebarButton::Close)?;
-        self.draw_button(canvas, &SidebarButton::Save)?;
-        self.draw_button(canvas, &SidebarButton::Music)?;
-        self.draw_button(canvas, &SidebarButton::Graphics)?;
-        self.draw_button(canvas, &SidebarButton::Help)?;
+        self.draw_button(canvas, game, SidebarMenu::Close)?;
+        self.draw_button(canvas, game, SidebarMenu::Save)?;
+        self.draw_button(canvas, game, SidebarMenu::Music)?;
+        self.draw_button(canvas, game, SidebarMenu::Graphics)?;
+        self.draw_button(canvas, game, SidebarMenu::Help)?;
 
-        self.draw_button(canvas, &SidebarButton::Rotation)?;
-        self.draw_button(canvas, &SidebarButton::Metrics)?;
-        self.draw_button(canvas, &SidebarButton::Finances)?;
-        self.draw_button(canvas, &SidebarButton::News)?;
-        self.draw_button(canvas, &SidebarButton::Info)?;
+        self.draw_button(canvas, game, SidebarMenu::Rotation)?;
+        self.draw_button(canvas, game, SidebarMenu::Metrics)?;
+        self.draw_button(canvas, game, SidebarMenu::Finances)?;
+        self.draw_button(canvas, game, SidebarMenu::News)?;
+        self.draw_button(canvas, game, SidebarMenu::Info)?;
 
-        self.draw_button(canvas, &SidebarButton::Navigation)?;
-        self.draw_button(canvas, &SidebarButton::Building)?;
-        self.draw_button(canvas, &SidebarButton::Rail)?;
-        self.draw_button(canvas, &SidebarButton::Demolish)?;
-        self.draw_button(canvas, &SidebarButton::Point)?;
+        self.draw_button(canvas, game, SidebarMenu::Navigation)?;
+        self.draw_button(canvas, game, SidebarMenu::Building)?;
+        self.draw_button(canvas, game, SidebarMenu::Rail)?;
+        self.draw_button(canvas, game, SidebarMenu::Demolish)?;
+        self.draw_button(canvas, game, SidebarMenu::Point)?;
 
         Ok(())
     }
 
-    fn button_under_cursor(&self, x: i32, y: i32) -> Option<SidebarButton> {
+    fn button_under_cursor(&self, x: i32, y: i32) -> Option<SidebarMenu> {
         match (
             x / (BUTTON_WIDTH * self.scale_x) as i32,
             (y - (BUTTON_GRID_OFFSET_Y * self.scale_y) as i32)
                 / (BUTTON_HEIGHT * self.scale_y) as i32,
         ) {
-            (0, 0) => Some(SidebarButton::Close),
-            (1, 0) => Some(SidebarButton::Save),
-            (2, 0) => Some(SidebarButton::Music),
-            (3, 0) => Some(SidebarButton::Graphics),
-            (4, 0) => Some(SidebarButton::Help),
+            (0, 0) => Some(SidebarMenu::Close),
+            (1, 0) => Some(SidebarMenu::Save),
+            (2, 0) => Some(SidebarMenu::Music),
+            (3, 0) => Some(SidebarMenu::Graphics),
+            (4, 0) => Some(SidebarMenu::Help),
 
-            (0, 1) => Some(SidebarButton::Rotation),
-            (1, 1) => Some(SidebarButton::Metrics),
-            (2, 1) => Some(SidebarButton::Finances),
-            (3, 1) => Some(SidebarButton::News),
-            (4, 1) => Some(SidebarButton::Info),
+            (0, 1) => Some(SidebarMenu::Rotation),
+            (1, 1) => Some(SidebarMenu::Metrics),
+            (2, 1) => Some(SidebarMenu::Finances),
+            (3, 1) => Some(SidebarMenu::News),
+            (4, 1) => Some(SidebarMenu::Info),
 
-            (0, 2) => Some(SidebarButton::Navigation),
-            (1, 2) => Some(SidebarButton::Building),
-            (2, 2) => Some(SidebarButton::Rail),
-            (3, 2) => Some(SidebarButton::Demolish),
-            (4, 2) => Some(SidebarButton::Point),
+            (0, 2) => Some(SidebarMenu::Navigation),
+            (1, 2) => Some(SidebarMenu::Building),
+            (2, 2) => Some(SidebarMenu::Rail),
+            (3, 2) => Some(SidebarMenu::Demolish),
+            (4, 2) => Some(SidebarMenu::Point),
 
             (_, _) => None,
         }
@@ -153,84 +141,101 @@ impl Sidebar {
     fn draw_button(
         &self,
         canvas: &mut Canvas<Window>,
-        button: &SidebarButton,
+        game: &GameState,
+        button: SidebarMenu,
     ) -> Result<(), String> {
+        let left = (button_column(button) * BUTTON_WIDTH * self.scale_x) as i32;
+        let top = (button_row(button) * BUTTON_HEIGHT * self.scale_y
+            + BUTTON_GRID_OFFSET_Y * self.scale_y) as i32;
+        let width = BUTTON_WIDTH * self.scale_x;
+        let height = BUTTON_HEIGHT * self.scale_y;
+
+        let rect = Rect::new(left, top, width, height);
+
+        let depressed = game.open_menu == Some(button);
+        if depressed {
+            // Draw the button as depressed.
+            canvas.set_draw_color(Color::from(COLOR_DEPRESSED_BUTTON_BACKGROUND));
+            canvas.fill_rect(rect)?;
+        }
+
         canvas.copy(
             &self.button_textures[button_texture_index(button)],
             None,
-            Some(Rect::new(
-                (button_column(button) * BUTTON_WIDTH * self.scale_x) as i32,
-                (button_row(button) * BUTTON_HEIGHT * self.scale_y
-                    + BUTTON_GRID_OFFSET_Y * self.scale_y) as i32,
-                BUTTON_WIDTH * self.scale_x,
-                BUTTON_HEIGHT * self.scale_y,
-            )),
-        )
+            Some(rect),
+        )?;
+
+        if depressed {
+            canvas.set_draw_color(Color::from(COLOR_DEPRESSED_BUTTON_OUTLINE));
+            canvas.draw_rect(rect)?;
+        }
+
+        Ok(())
     }
 }
 
-fn button_texture_index(button: &SidebarButton) -> usize {
+fn button_texture_index(button: SidebarMenu) -> usize {
     match button {
-        SidebarButton::Close => 0,
-        SidebarButton::Save => 1,
-        SidebarButton::Music => 2,
-        SidebarButton::Graphics => 3,
-        SidebarButton::Help => 4,
+        SidebarMenu::Close => 0,
+        SidebarMenu::Save => 1,
+        SidebarMenu::Music => 2,
+        SidebarMenu::Graphics => 3,
+        SidebarMenu::Help => 4,
 
-        SidebarButton::Rotation => 5,
-        SidebarButton::Metrics => 6,
-        SidebarButton::Finances => 7,
-        SidebarButton::News => 8,
-        SidebarButton::Info => 9,
+        SidebarMenu::Rotation => 5,
+        SidebarMenu::Metrics => 6,
+        SidebarMenu::Finances => 7,
+        SidebarMenu::News => 8,
+        SidebarMenu::Info => 9,
 
-        SidebarButton::Navigation => 10,
-        SidebarButton::Building => 11,
-        SidebarButton::Rail => 12,
-        SidebarButton::Demolish => 13,
-        SidebarButton::Point => 14,
+        SidebarMenu::Navigation => 10,
+        SidebarMenu::Building => 11,
+        SidebarMenu::Rail => 12,
+        SidebarMenu::Demolish => 13,
+        SidebarMenu::Point => 14,
     }
 }
 
-fn button_row(button: &SidebarButton) -> u32 {
+fn button_row(button: SidebarMenu) -> u32 {
     match button {
-        SidebarButton::Close
-        | SidebarButton::Save
-        | SidebarButton::Music
-        | SidebarButton::Graphics
-        | SidebarButton::Help => 0,
+        SidebarMenu::Close
+        | SidebarMenu::Save
+        | SidebarMenu::Music
+        | SidebarMenu::Graphics
+        | SidebarMenu::Help => 0,
 
-        SidebarButton::Rotation
-        | SidebarButton::Metrics
-        | SidebarButton::Finances
-        | SidebarButton::News
-        | SidebarButton::Info => 1,
+        SidebarMenu::Rotation
+        | SidebarMenu::Metrics
+        | SidebarMenu::Finances
+        | SidebarMenu::News
+        | SidebarMenu::Info => 1,
 
-        SidebarButton::Navigation
-        | SidebarButton::Building
-        | SidebarButton::Rail
-        | SidebarButton::Demolish
-        | SidebarButton::Point => 2,
+        SidebarMenu::Navigation
+        | SidebarMenu::Building
+        | SidebarMenu::Rail
+        | SidebarMenu::Demolish
+        | SidebarMenu::Point => 2,
     }
 }
 
-fn button_column(button: &SidebarButton) -> u32 {
+fn button_column(button: SidebarMenu) -> u32 {
     match button {
-        SidebarButton::Close => 0,
-        SidebarButton::Save => 1,
-        SidebarButton::Music => 2,
-        SidebarButton::Graphics => 3,
-        SidebarButton::Help => 4,
+        SidebarMenu::Close => 0,
+        SidebarMenu::Save => 1,
+        SidebarMenu::Music => 2,
+        SidebarMenu::Graphics => 3,
+        SidebarMenu::Help => 4,
 
-        SidebarButton::Rotation => 0,
-        SidebarButton::Metrics => 1,
-        SidebarButton::Finances => 2,
-        SidebarButton::News => 3,
-        SidebarButton::Info => 4,
+        SidebarMenu::Rotation => 0,
+        SidebarMenu::Metrics => 1,
+        SidebarMenu::Finances => 2,
+        SidebarMenu::News => 3,
+        SidebarMenu::Info => 4,
 
-        SidebarButton::Navigation => 0,
-        SidebarButton::Building => 1,
-        SidebarButton::Rail => 2,
-        SidebarButton::Demolish => 3,
-        SidebarButton::Point => 4,
+        SidebarMenu::Navigation => 0,
+        SidebarMenu::Building => 1,
+        SidebarMenu::Rail => 2,
+        SidebarMenu::Demolish => 3,
+        SidebarMenu::Point => 4,
     }
 }

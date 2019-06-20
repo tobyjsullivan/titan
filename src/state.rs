@@ -13,7 +13,8 @@ pub struct GameState {
     pub focal_point: Vertex,
     pub player_mode: PlayerMode,
     pub highlighted_block: Option<Block>,
-    pub highlighted_button: Option<SidebarButton>,
+    pub highlighted_button: Option<SidebarMenu>,
+    pub open_menu: Option<SidebarMenu>,
 }
 
 impl GameState {
@@ -29,6 +30,7 @@ impl GameState {
             // player_mode: PlayerMode::RaiseLower { radius: 0 },
             highlighted_block: None,
             highlighted_button: None,
+            open_menu: None,
         }
     }
 
@@ -133,7 +135,8 @@ impl GameBoard {
     }
 }
 
-pub enum SidebarButton {
+#[derive(PartialEq, Copy, Clone)]
+pub enum SidebarMenu {
     Close,
     Save,
     Music,
