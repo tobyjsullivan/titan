@@ -35,13 +35,15 @@ fn main() -> Result<(), String> {
         .window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .allow_highdpi()
+        .fullscreen_desktop()
         .opengl()
         .build()
         .map_err(|e| e.to_string())?;
 
+    let (window_width, window_height) = window.size();
     let (drawable_x, drawable_y) = window.drawable_size();
-    let scale_x = drawable_x / WINDOW_WIDTH;
-    let scale_y = drawable_y / WINDOW_HEIGHT;
+    let scale_x = drawable_x / window_width;
+    let scale_y = drawable_y / window_height;
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     let texture_creator = canvas.texture_creator();
@@ -49,14 +51,14 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_ctx.event_pump()?;
 
     let mut viewport = Viewport::new(
-        WINDOW_WIDTH * scale_x - SIDEBAR_WIDTH * scale_x,
-        WINDOW_HEIGHT * scale_y,
+        window_width * scale_x - SIDEBAR_WIDTH * scale_x,
+        window_height * scale_y,
         SIDEBAR_WIDTH * scale_x,
     );
     let mut sidebar = Sidebar::new(
         texture_creator,
         SIDEBAR_WIDTH * scale_x,
-        WINDOW_HEIGHT * scale_y,
+        window_height * scale_y,
         scale_x,
         scale_y,
     );
