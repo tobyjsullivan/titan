@@ -125,6 +125,9 @@ fn main() -> Result<(), String> {
                 Some(GameAction::RaiseTerrain) => {
                     systems::terrain::apply_raise_terrain(&mut game);
                 }
+                Some(GameAction::SetPlayerMode { mode }) => {
+                    systems::menu::apply_set_player_mode(&mut game, mode);
+                }
                 Some(GameAction::SidebarHover { button }) => {
                     systems::navigation::apply_sidebar_hover(&mut game, button);
                 }

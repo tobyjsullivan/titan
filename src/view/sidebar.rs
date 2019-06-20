@@ -1,6 +1,6 @@
 use crate::action::GameAction;
 use crate::controller::{PlayerAction, WindowPanel};
-use crate::state::{GameState, SidebarButton};
+use crate::state::{Direction, GameState, Object, PlayerMode, SidebarButton};
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
@@ -69,6 +69,29 @@ impl Sidebar {
             } => Some(GameAction::SidebarHover {
                 button: self.button_under_cursor(x, y),
             }),
+            PlayerAction::WindowLeftClick {
+                panel: WindowPanel::Sidebar,
+                x,
+                y,
+            } => {
+                match game.highlighted_button {
+                    Some(SidebarButton::Navigation) => Some(GameAction::SetPlayerMode {
+                        mode: PlayerMode::Focus,
+                    }),
+                    Some(SidebarButton::Building) => Some(GameAction::SetPlayerMode {
+                        mode: PlayerMode::PlaceObject {
+                            obj: Object::Forest,
+                            orientation: Direction::North,
+                        },
+                    }),
+                    Some(SidebarButton::Demolish) => Some(GameAction::SetPlayerMode {
+                        mode: PlayerMode::RaiseLower { radius: 0 },
+                    }),
+                    // TODO (toby)
+                    Some(_) => None,
+                    None => None,
+                }
+            }
             _ => None,
         }
     }
