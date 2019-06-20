@@ -519,18 +519,17 @@ fn fill_block(
 
     // Filled polygons can be restored when a better play experience is needed.
     // let vx = [
-    //     v_top_left.x as i16,
-    //     v_top_right.x as i16,
-    //     v_bottom_right.x as i16,
-    //     v_bottom_left.x as i16,
+    //     v_top_left.to_renderable(viewport).x as i16,
+    //     v_top_right.to_renderable(viewport).x as i16,
+    //     v_bottom_right.to_renderable(viewport).x as i16,
+    //     v_bottom_left.to_renderable(viewport).x as i16,
     // ];
     // let vy = [
-    //     v_top_left.y as i16,
-    //     v_top_right.y as i16,
-    //     v_bottom_right.y as i16,
-    //     v_bottom_left.y as i16,
+    //     v_top_left.to_renderable(viewport).y as i16,
+    //     v_top_right.to_renderable(viewport).y as i16,
+    //     v_bottom_right.to_renderable(viewport).y as i16,
+    //     v_bottom_left.to_renderable(viewport).y as i16,
     // ];
-
     // canvas.filled_polygon(&vx[..], &vy[..], color)?;
 
     canvas.set_draw_color(prior_color);
