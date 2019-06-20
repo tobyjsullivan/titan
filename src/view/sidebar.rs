@@ -13,21 +13,7 @@ const COLOR_SIDEBAR: (u8, u8, u8) = (132, 132, 123);
 pub struct Sidebar {
     width: u32,
     height: u32,
-    btn_close: Texture,
-    btn_save: Texture,
-    btn_music: Texture,
-    btn_graphics: Texture,
-    btn_help: Texture,
-    btn_rotate: Texture,
-    btn_graphs: Texture,
-    btn_money: Texture,
-    btn_news: Texture,
-    btn_info: Texture,
-    btn_navigate: Texture,
-    btn_building: Texture,
-    btn_rail: Texture,
-    btn_demolish: Texture,
-    btn_point: Texture,
+    button_textures: [Texture; 15],
 }
 
 impl Sidebar {
@@ -35,27 +21,27 @@ impl Sidebar {
         Self {
             width,
             height,
-            btn_close: texture_creator.load_texture("art/close_128.png").unwrap(),
-            btn_save: texture_creator.load_texture("art/save_128.png").unwrap(),
-            btn_music: texture_creator.load_texture("art/music_128.png").unwrap(),
-            btn_graphics: texture_creator.load_texture("art/eyeball_128.png").unwrap(),
-            btn_help: texture_creator
-                .load_texture("art/question_128.png")
-                .unwrap(),
-
-            btn_rotate: texture_creator.load_texture("art/compass_128.png").unwrap(),
-            btn_graphs: texture_creator.load_texture("art/chart_128.png").unwrap(),
-            btn_money: texture_creator.load_texture("art/cash_128.png").unwrap(),
-            btn_news: texture_creator.load_texture("art/news_128.png").unwrap(),
-            btn_info: texture_creator.load_texture("art/info_128.png").unwrap(),
-
-            btn_navigate: texture_creator.load_texture("art/magnify_128.png").unwrap(),
-            btn_building: texture_creator.load_texture("art/factory_128.png").unwrap(),
-            btn_rail: texture_creator.load_texture("art/railway_128.png").unwrap(),
-            btn_demolish: texture_creator
-                .load_texture("art/demolish_128.png")
-                .unwrap(),
-            btn_point: texture_creator.load_texture("art/point_128.png").unwrap(),
+            button_textures: [
+                texture_creator.load_texture("art/close_128.png").unwrap(),
+                texture_creator.load_texture("art/save_128.png").unwrap(),
+                texture_creator.load_texture("art/music_128.png").unwrap(),
+                texture_creator.load_texture("art/eyeball_128.png").unwrap(),
+                texture_creator
+                    .load_texture("art/question_128.png")
+                    .unwrap(),
+                texture_creator.load_texture("art/compass_128.png").unwrap(),
+                texture_creator.load_texture("art/chart_128.png").unwrap(),
+                texture_creator.load_texture("art/cash_128.png").unwrap(),
+                texture_creator.load_texture("art/news_128.png").unwrap(),
+                texture_creator.load_texture("art/info_128.png").unwrap(),
+                texture_creator.load_texture("art/magnify_128.png").unwrap(),
+                texture_creator.load_texture("art/factory_128.png").unwrap(),
+                texture_creator.load_texture("art/railway_128.png").unwrap(),
+                texture_creator
+                    .load_texture("art/demolish_128.png")
+                    .unwrap(),
+                texture_creator.load_texture("art/point_128.png").unwrap(),
+            ],
         }
     }
 
@@ -75,42 +61,117 @@ impl Sidebar {
         canvas.fill_rect(Rect::new(0, 0, self.width, self.height))?;
 
         // Draw buttons
-        Self::draw_button(canvas, 0, 0, &self.btn_close)?;
-        Self::draw_button(canvas, 0, 1, &self.btn_save)?;
-        Self::draw_button(canvas, 0, 2, &self.btn_music)?;
-        Self::draw_button(canvas, 0, 3, &self.btn_graphics)?;
-        Self::draw_button(canvas, 0, 4, &self.btn_help)?;
+        self.draw_button(canvas, Button::Close);
+        self.draw_button(canvas, Button::Save);
+        self.draw_button(canvas, Button::Music);
+        self.draw_button(canvas, Button::Graphics);
+        self.draw_button(canvas, Button::Help);
 
-        Self::draw_button(canvas, 1, 0, &self.btn_rotate)?;
-        Self::draw_button(canvas, 1, 1, &self.btn_graphs)?;
-        Self::draw_button(canvas, 1, 2, &self.btn_money)?;
-        Self::draw_button(canvas, 1, 3, &self.btn_news)?;
-        Self::draw_button(canvas, 1, 4, &self.btn_info)?;
+        self.draw_button(canvas, Button::Rotation);
+        self.draw_button(canvas, Button::Metrics);
+        self.draw_button(canvas, Button::Finances);
+        self.draw_button(canvas, Button::News);
+        self.draw_button(canvas, Button::Info);
 
-        Self::draw_button(canvas, 2, 0, &self.btn_navigate)?;
-        Self::draw_button(canvas, 2, 1, &self.btn_building)?;
-        Self::draw_button(canvas, 2, 2, &self.btn_rail)?;
-        Self::draw_button(canvas, 2, 3, &self.btn_demolish)?;
-        Self::draw_button(canvas, 2, 4, &self.btn_point)?;
+        self.draw_button(canvas, Button::Navigation);
+        self.draw_button(canvas, Button::Building);
+        self.draw_button(canvas, Button::Rail);
+        self.draw_button(canvas, Button::Demolish);
+        self.draw_button(canvas, Button::Point);
 
         Ok(())
     }
 
-    fn draw_button(
-        canvas: &mut Canvas<Window>,
-        row: u32,
-        column: u32,
-        texture: &Texture,
-    ) -> Result<(), String> {
+    fn draw_button(&self, canvas: &mut Canvas<Window>, button: Button) -> Result<(), String> {
         canvas.copy(
-            texture,
+            &self.button_textures[button.texture_index()],
             None,
             Some(Rect::new(
-                (column * 32) as i32,
-                (row * 32) as i32,
+                (button.column() * 32) as i32,
+                (button.row() * 32) as i32,
                 32 as u32,
                 32 as u32,
             )),
         )
+    }
+}
+
+enum Button {
+    Close,
+    Save,
+    Music,
+    Graphics,
+    Help,
+    Rotation,
+    Metrics,
+    Finances,
+    News,
+    Info,
+    Navigation,
+    Building,
+    Rail,
+    Demolish,
+    Point,
+}
+
+impl Button {
+    fn texture_index(&self) -> usize {
+        match self {
+            Button::Close => 0,
+            Button::Save => 1,
+            Button::Music => 2,
+            Button::Graphics => 3,
+            Button::Help => 4,
+
+            Button::Rotation => 5,
+            Button::Metrics => 6,
+            Button::Finances => 7,
+            Button::News => 8,
+            Button::Info => 9,
+
+            Button::Navigation => 10,
+            Button::Building => 11,
+            Button::Rail => 12,
+            Button::Demolish => 13,
+            Button::Point => 14,
+        }
+    }
+
+    fn row(&self) -> u32 {
+        match self {
+            Button::Close | Button::Save | Button::Music | Button::Graphics | Button::Help => 0,
+
+            Button::Rotation | Button::Metrics | Button::Finances | Button::News | Button::Info => {
+                1
+            }
+
+            Button::Navigation
+            | Button::Building
+            | Button::Rail
+            | Button::Demolish
+            | Button::Point => 2,
+        }
+    }
+
+    fn column(&self) -> u32 {
+        match self {
+            Button::Close => 0,
+            Button::Save => 1,
+            Button::Music => 2,
+            Button::Graphics => 3,
+            Button::Help => 4,
+
+            Button::Rotation => 0,
+            Button::Metrics => 1,
+            Button::Finances => 2,
+            Button::News => 3,
+            Button::Info => 4,
+
+            Button::Navigation => 0,
+            Button::Building => 1,
+            Button::Rail => 2,
+            Button::Demolish => 3,
+            Button::Point => 4,
+        }
     }
 }
