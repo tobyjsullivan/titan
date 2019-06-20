@@ -6,5 +6,6 @@ pub enum GameAction {
     OpenMenu { menu: SidebarMenu },
     Focus,
     RaiseTerrain,
+    RotateObject,
     LowerTerrain,
 }

@@ -119,6 +119,7 @@ impl Viewport {
             (PlayerAction::CursorMove { x, y, .. }, _) => Some(GameAction::Hover {
                 block: self.get_block_under_cursor(&game, x, y),
             }),
+            (PlayerAction::PressSpace, _) => Some(GameAction::RotateObject),
             (PlayerAction::WindowLeftClick { .. }, PlayerMode::Focus) => Some(GameAction::Focus),
             (PlayerAction::WindowLeftClick { .. }, PlayerMode::RaiseLower { .. }) => {
                 Some(GameAction::RaiseTerrain)
@@ -235,7 +236,7 @@ impl Viewport {
             match game.selection_mode() {
                 SelectionMode::None => {}
                 SelectionMode::Blocks { w, h } => {
-                    // TODO (toby): Highlight all blocks in (w X h) with current block at the top.
+                    // Highlight all blocks in (w X h) with current block at the top.
                     // w is positive along x-axis; h is positive along y-axis.
                     for y in 0..h {
                         for x in 0..w {

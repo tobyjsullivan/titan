@@ -78,6 +78,12 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(Keycode::Space),
+                    ..
+                } => {
+                    player_actions.push(PlayerAction::PressSpace);
+                }
                 Event::MouseMotion { x, y, .. } => {
                     let player_action = PlayerAction::CursorMove {
                         panel: window_panel(x, y),
@@ -122,11 +128,14 @@ fn main() -> Result<(), String> {
                 Some(GameAction::LowerTerrain) => {
                     systems::terrain::apply_lower_terrain(&mut game);
                 }
+                Some(GameAction::OpenMenu { menu }) => {
+                    systems::menu::apply_open_menu(&mut game, menu);
+                }
                 Some(GameAction::RaiseTerrain) => {
                     systems::terrain::apply_raise_terrain(&mut game);
                 }
-                Some(GameAction::OpenMenu { menu }) => {
-                    systems::menu::apply_open_menu(&mut game, menu);
+                Some(GameAction::RotateObject) => {
+                    systems::object::apply_rotate_object(&mut game);
                 }
                 Some(GameAction::SidebarHover { button }) => {
                     systems::navigation::apply_sidebar_hover(&mut game, button);

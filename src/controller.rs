@@ -14,6 +14,7 @@ pub enum PlayerAction {
     CursorMove { panel: WindowPanel, x: i32, y: i32 },
     WindowLeftClick { panel: WindowPanel, x: i32, y: i32 },
     WindowRightClick { panel: WindowPanel, x: i32, y: i32 },
+    PressSpace,
 }
 
 pub fn map_player_action(
@@ -47,5 +48,6 @@ pub fn map_player_action(
             panel: WindowPanel::Viewport,
             ..
         } => viewport.map_player_action(game, click),
+        PlayerAction::PressSpace => viewport.map_player_action(game, PlayerAction::PressSpace),
     }
 }

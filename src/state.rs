@@ -37,9 +37,12 @@ impl GameState {
     pub fn selection_mode(&self) -> SelectionMode {
         match self.player_mode {
             PlayerMode::Focus => SelectionMode::None,
-            PlayerMode::PlaceObject { .. } => {
-                // TODO (toby): Properly determine object size.
-                SelectionMode::Blocks { w: 5, h: 3 }
+            PlayerMode::PlaceObject { obj, orientation } => {
+                let (w, h) = obj.size();
+                match orientation {
+                    Direction::North | Direction::South => SelectionMode::Blocks { w, h },
+                    Direction::East | Direction::West => SelectionMode::Blocks { w: h, h: w },
+                }
             }
             PlayerMode::RaiseLower { radius } => SelectionMode::Vertex { radius },
         }
@@ -189,24 +192,29 @@ pub enum LandType {
     Land,
 }
 
+#[derive(PartialEq, Clone, Copy)]
 struct ObjectPlacement {
     object: Object,
     orientation: Direction,
     origin: Vertex,
 }
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum Object {
     Forest,
+    RailPlatform,
 }
 
 impl Object {
-    fn size(obj: Object) -> (ObjectDimension, ObjectDimension) {
-        match obj {
+    fn size(&self) -> (ObjectDimension, ObjectDimension) {
+        match self {
             Object::Forest => (1, 1),
+            Object::RailPlatform => (4, 2),
         }
     }
 }
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum Direction {
     North,
     East,
@@ -214,12 +222,14 @@ pub enum Direction {
     West,
 }
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum PlayerMode {
     Focus,
     RaiseLower { radius: u8 },
     PlaceObject { obj: Object, orientation: Direction },
 }
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum SelectionMode {
     None,
     Vertex { radius: u8 },
