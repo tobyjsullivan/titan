@@ -15,7 +15,7 @@ use super::{COLOR_BLACK, COLOR_WHITE};
 
 const ISO_ANGLE_RADS: f32 = 26.22 / 180.0 * PI;
 
-const HEIGHT_UNIT_OFFSET: u32 = 5;
+const HEIGHT_UNIT_OFFSET: u32 = 10;
 
 const GRID_SCALE: f32 = 30.0;
 

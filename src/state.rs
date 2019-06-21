@@ -1,5 +1,5 @@
-const BOARD_WIDTH: u32 = 1000;
-const BOARD_HEIGHT: u32 = 1000;
+const BOARD_WIDTH: u32 = 100;
+const BOARD_HEIGHT: u32 = 100;
 
 pub const WATER_LEVEL: u8 = 0;
 
@@ -60,6 +60,12 @@ impl GameBoard {
             vertices: [WATER_LEVEL; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
             objects: Vec::new(),
         };
+
+        for y in 1..BOARD_HEIGHT {
+            for x in 1..BOARD_WIDTH {
+                res.vertices[Self::vertex_index(Vertex { x, y })] += 1;
+            }
+        }
 
         // Set a few vertices to WATER+1.
         for &v in [
