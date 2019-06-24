@@ -24,7 +24,14 @@ const COLOR_HIGHLIGHT_BLOCK: (u8, u8, u8, u8) = (255, 255, 255, 150);
 const COLOR_WATER: (u8, u8, u8) = (53, 117, 189);
 const COLOR_LAND: (u8, u8, u8) = (0, 200, 0);
 const COLOR_FOREST: (u8, u8, u8) = (47, 99, 67);
-const COLOR_RAIL_PLATFORM: (u8, u8, u8) = (245, 163, 0);
+
+const COLOR_STRUCTURE_CITY_BUILDINGS: (u8, u8, u8) = (153, 153, 153);
+const COLOR_STRUCTURE_LUMBER_MILL: (u8, u8, u8) = (232, 210, 160);
+const COLOR_STRUCTURE_STEEL_MILL: (u8, u8, u8) = (237, 237, 237);
+const COLOR_STRUCTURE_MINE: (u8, u8, u8) = (160, 83, 0);
+const COLOR_STRUCTURE_CHEMICAL_PLANT: (u8, u8, u8) = (182, 242, 150);
+const COLOR_STRUCTURE_TRANSPORTATION: (u8, u8, u8) = (92, 96, 90);
+const COLOR_STRUCTURE_PLAYER: (u8, u8, u8) = (198, 42, 7);
 
 pub struct Viewport {
     window_width: u32,
@@ -252,11 +259,7 @@ impl Viewport {
                 }
 
                 if let Some(structure) = game.board.block_structure_type(Block { x, y }) {
-                    let mut tile_color = match structure {
-                        Structure::Forest => Color::from(COLOR_FOREST),
-                        Structure::RailPlatform => Color::from(COLOR_RAIL_PLATFORM),
-                    };
-
+                    let tile_color = Self::structure_color(structure);
                     fill_block(canvas, &self, &game, x as i32, y as i32, tile_color)?;
                 }
             }
@@ -298,6 +301,60 @@ impl Viewport {
         // println!("Compute and draw: {:?}", draw_begin.elapsed());
 
         Ok(())
+    }
+
+    fn structure_color(structure: Structure) -> Color {
+        match structure {
+            Structure::Forest => Color::from(COLOR_FOREST),
+
+            // Transportation
+            Structure::Street
+            | Structure::Rails
+            | Structure::Bridge
+            | Structure::Tunnel
+            | Structure::CityRoad => Color::from(COLOR_STRUCTURE_TRANSPORTATION),
+
+            // City Buildings
+            Structure::ApartmentBuilding
+            | Structure::CulturalCenter
+            | Structure::TennisCourt
+            | Structure::SwimmingPool
+            | Structure::SportsStadium
+            | Structure::RaceTrack
+            | Structure::University
+            | Structure::AmusementPark => Color::from(COLOR_STRUCTURE_CITY_BUILDINGS),
+
+            // Resources
+            Structure::LumberMill => Color::from(COLOR_STRUCTURE_LUMBER_MILL),
+            Structure::ChemicalPlant => Color::from(COLOR_STRUCTURE_CHEMICAL_PLANT),
+            Structure::SteelMill => Color::from(COLOR_STRUCTURE_STEEL_MILL),
+            Structure::Mine { .. } => Color::from(COLOR_STRUCTURE_MINE),
+
+            // Player Buildings
+            Structure::TruckDepot
+            | Structure::TrainStation
+            | Structure::TrainPlatform
+            | Structure::Harbor
+            | Structure::Airport
+            | Structure::AutomobileFactory
+            | Structure::Woodshop
+            | Structure::ElectronicsFactory
+            | Structure::SportsEquipmentFactory
+            | Structure::ToyFactory
+            | Structure::JewelryFactory
+            | Structure::Warehouse
+            | Structure::BuildingEquipmentFactory
+            | Structure::PaperFactory
+            | Structure::PrintingPress
+            | Structure::ToyStore
+            | Structure::SportingGoodsStore
+            | Structure::FurnitureStore
+            | Structure::Jeweler
+            | Structure::ElectronicsStore
+            | Structure::CarDealership
+            | Structure::BuildingEquipmentStore
+            | Structure::StationaryStore => Color::from(COLOR_STRUCTURE_PLAYER),
+        }
     }
 }
 

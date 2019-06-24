@@ -259,16 +259,115 @@ impl StructurePlacement {
 }
 
 #[derive(PartialEq, Clone, Copy)]
+pub enum Mineral {
+    Gold,
+    Silver,
+}
+
+#[derive(PartialEq, Clone, Copy)]
 pub enum Structure {
+    // Nature
     Forest,
-    RailPlatform,
+
+    // City
+    CityRoad,
+    ApartmentBuilding, // TODO (toby): There should probably be many city building types.
+
+    // City (Player Built)
+    CulturalCenter,
+    TennisCourt,
+    SwimmingPool,
+    SportsStadium,
+    RaceTrack,
+    University,
+    AmusementPark,
+
+    // Resources
+    LumberMill,
+    ChemicalPlant,
+    SteelMill,
+    Mine { mineral: Mineral },
+
+    // Transportation
+    Street,
+    Rails,
+    Bridge,
+    Tunnel,
+
+    // Terminals
+    TruckDepot,
+    TrainStation,
+    TrainPlatform,
+    Harbor,
+    Airport,
+
+    // Production
+    AutomobileFactory,
+    Woodshop,
+    ElectronicsFactory,
+    SportsEquipmentFactory,
+    ToyFactory,
+    JewelryFactory,
+    Warehouse,
+    BuildingEquipmentFactory,
+    PaperFactory,
+    PrintingPress,
+
+    // Retail
+    ToyStore,
+    SportingGoodsStore,
+    FurnitureStore,
+    Jeweler,
+    ElectronicsStore,
+    CarDealership,
+    BuildingEquipmentStore,
+    StationaryStore,
 }
 
 impl Structure {
     fn size(&self) -> (StructureDimension, StructureDimension) {
         match self {
             Structure::Forest => (1, 1),
-            Structure::RailPlatform => (4, 2),
+            Structure::CityRoad => (1, 1),
+            Structure::ApartmentBuilding => (1, 1),
+            Structure::CulturalCenter => (1, 1),
+            Structure::TennisCourt => (2, 2),
+            Structure::SwimmingPool => (2, 2),
+            Structure::SportsStadium => (2, 3),
+            Structure::RaceTrack => (3, 3),
+            Structure::University => (3, 3),
+            Structure::AmusementPark => (5, 5),
+            Structure::LumberMill => (4, 4),
+            Structure::ChemicalPlant => (5, 5),
+            Structure::SteelMill => (5, 5),
+            Structure::Mine { .. } => (2, 2),
+            Structure::Street => (1, 1),
+            Structure::Rails => (1, 1),
+            Structure::Bridge => (1, 1),
+            Structure::Tunnel => (1, 1),
+            Structure::TruckDepot => (1, 1),
+            Structure::TrainStation => (4, 2),
+            Structure::TrainPlatform => (4, 1),
+            Structure::Harbor => (3, 3),
+            Structure::Airport => (5, 5),
+            Structure::AutomobileFactory => (5, 5),
+            Structure::Woodshop => (4, 4),
+            Structure::ElectronicsFactory => (4, 4),
+            Structure::SportsEquipmentFactory => (4, 4),
+            Structure::ToyFactory => (4, 4),
+            Structure::JewelryFactory => (3, 3),
+            Structure::Warehouse => (4, 4),
+            Structure::BuildingEquipmentFactory => (4, 4),
+            Structure::PaperFactory => (4, 4),
+            Structure::PrintingPress => (4, 4),
+            Structure::ToyStore => (2, 2),
+            Structure::SportingGoodsStore => (2, 2),
+            Structure::FurnitureStore => (2, 2),
+            Structure::Jeweler => (2, 2),
+            Structure::ElectronicsStore => (2, 2),
+            Structure::CarDealership => (2, 2),
+            Structure::BuildingEquipmentStore => (3, 3),
+            Structure::StationaryStore => (2, 2),
         }
     }
 }

@@ -8,7 +8,7 @@ pub fn apply_open_menu(game: &mut GameState, menu: SidebarMenu) {
         }
         SidebarMenu::Building => {
             game.player_mode = PlayerMode::PlaceStructure {
-                structure: Structure::RailPlatform,
+                structure: Structure::TrainStation,
                 orientation: Direction::North,
             };
         }
