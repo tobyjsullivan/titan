@@ -37,7 +37,10 @@ impl GameState {
     pub fn selection_mode(&self) -> SelectionMode {
         match self.player_mode {
             PlayerMode::Focus => SelectionMode::None,
-            PlayerMode::PlaceStructure { structure, orientation } => {
+            PlayerMode::PlaceStructure {
+                structure,
+                orientation,
+            } => {
                 let (w, h) = structure.size();
                 match orientation {
                     Direction::North | Direction::South => SelectionMode::Blocks { w, h },
@@ -233,8 +236,13 @@ pub enum Direction {
 #[derive(PartialEq, Clone, Copy)]
 pub enum PlayerMode {
     Focus,
-    RaiseLower { radius: u8 },
-    PlaceStructure { structure: Structure, orientation: Direction },
+    RaiseLower {
+        radius: u8,
+    },
+    PlaceStructure {
+        structure: Structure,
+        orientation: Direction,
+    },
 }
 
 #[derive(PartialEq, Clone, Copy)]
