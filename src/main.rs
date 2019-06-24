@@ -134,8 +134,8 @@ fn main() -> Result<(), String> {
                 Some(GameAction::RaiseTerrain) => {
                     systems::terrain::apply_raise_terrain(&mut game);
                 }
-                Some(GameAction::RotateObject) => {
-                    systems::object::apply_rotate_object(&mut game);
+                Some(GameAction::RotateStructure) => {
+                    systems::structure::apply_rotate_structure(&mut game);
                 }
                 Some(GameAction::SidebarHover { button }) => {
                     systems::navigation::apply_sidebar_hover(&mut game, button);

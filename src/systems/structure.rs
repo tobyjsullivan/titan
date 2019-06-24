@@ -1,7 +1,7 @@
 use crate::state::{Direction, GameState, PlayerMode};
 
-pub fn apply_rotate_object(game: &mut GameState) {
-    if let PlayerMode::PlaceObject { obj, orientation } = game.player_mode {
+pub fn apply_rotate_structure(game: &mut GameState) {
+    if let PlayerMode::PlaceStructure { structure, orientation } = game.player_mode {
         let next_orientation = match orientation {
             Direction::North => Direction::East,
             Direction::East => Direction::South,
@@ -9,8 +9,8 @@ pub fn apply_rotate_object(game: &mut GameState) {
             Direction::West => Direction::North,
         };
 
-        game.player_mode = PlayerMode::PlaceObject {
-            obj,
+        game.player_mode = PlayerMode::PlaceStructure {
+            structure,
             orientation: next_orientation,
         };
     }

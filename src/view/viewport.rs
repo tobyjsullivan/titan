@@ -119,7 +119,7 @@ impl Viewport {
             (PlayerAction::CursorMove { x, y, .. }, _) => Some(GameAction::Hover {
                 block: self.get_block_under_cursor(&game, x, y),
             }),
-            (PlayerAction::PressSpace, _) => Some(GameAction::RotateObject),
+            (PlayerAction::PressSpace, _) => Some(GameAction::RotateStructure),
             (PlayerAction::WindowLeftClick { .. }, PlayerMode::Focus) => Some(GameAction::Focus),
             (PlayerAction::WindowLeftClick { .. }, PlayerMode::RaiseLower { .. }) => {
                 Some(GameAction::RaiseTerrain)
@@ -286,7 +286,7 @@ impl ViewportPoint {
 /// The surface is a continuous plane, hence the use of floating points for locations.
 /// Within this surface, however, is a unit grid system.
 /// The units correspond to integer values, for example (1.0, 3.0).
-/// Most world objects fill NxM units, for some integers N and M, and are positioned directly on grid edges.
+/// Most world structures fill NxM units, for some integers N and M, and are positioned directly on grid edges.
 #[derive(Debug)]
 struct WorldPoint {
     x: f32,

@@ -3,7 +3,7 @@ const BOARD_HEIGHT: u32 = 100;
 
 pub const WATER_LEVEL: u8 = 0;
 
-pub type ObjectDimension = u8;
+pub type StructureDimension = u8;
 pub type VertexHeight = u8;
 pub type VertexPosition = u32;
 pub type BlockPosition = u32;
@@ -23,8 +23,8 @@ impl GameState {
             board: GameBoard::new(),
             focal_point: Vertex { x: 10, y: 20 },
             // player_mode: PlayerMode::Focus,
-            player_mode: PlayerMode::PlaceObject {
-                obj: Object::Forest,
+            player_mode: PlayerMode::PlaceStructure {
+                structure: Structure::Forest,
                 orientation: Direction::North,
             },
             // player_mode: PlayerMode::RaiseLower { radius: 0 },
@@ -37,8 +37,8 @@ impl GameState {
     pub fn selection_mode(&self) -> SelectionMode {
         match self.player_mode {
             PlayerMode::Focus => SelectionMode::None,
-            PlayerMode::PlaceObject { obj, orientation } => {
-                let (w, h) = obj.size();
+            PlayerMode::PlaceStructure { structure, orientation } => {
+                let (w, h) = structure.size();
                 match orientation {
                     Direction::North | Direction::South => SelectionMode::Blocks { w, h },
                     Direction::East | Direction::West => SelectionMode::Blocks { w: h, h: w },
@@ -51,14 +51,16 @@ impl GameState {
 
 pub struct GameBoard {
     vertices: [VertexHeight; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
-    objects: Vec<ObjectPlacement>,
+    structures: Vec<StructurePlacement>,
+    block_occupants: [Option<usize>; (BOARD_WIDTH * BOARD_HEIGHT) as usize],
 }
 
 impl GameBoard {
     fn new() -> Self {
         let mut res = Self {
             vertices: [WATER_LEVEL; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
-            objects: Vec::new(),
+            structures: Vec::new(),
+            block_occupants: [None; (BOARD_WIDTH * BOARD_HEIGHT) as usize],
         };
 
         for y in 1..BOARD_HEIGHT {
@@ -199,23 +201,23 @@ pub enum LandType {
 }
 
 #[derive(PartialEq, Clone, Copy)]
-struct ObjectPlacement {
-    object: Object,
+struct StructurePlacement {
+    structure: Structure,
     orientation: Direction,
     origin: Vertex,
 }
 
 #[derive(PartialEq, Clone, Copy)]
-pub enum Object {
+pub enum Structure {
     Forest,
     RailPlatform,
 }
 
-impl Object {
-    fn size(&self) -> (ObjectDimension, ObjectDimension) {
+impl Structure {
+    fn size(&self) -> (StructureDimension, StructureDimension) {
         match self {
-            Object::Forest => (1, 1),
-            Object::RailPlatform => (4, 2),
+            Structure::Forest => (1, 1),
+            Structure::RailPlatform => (4, 2),
         }
     }
 }
@@ -232,7 +234,7 @@ pub enum Direction {
 pub enum PlayerMode {
     Focus,
     RaiseLower { radius: u8 },
-    PlaceObject { obj: Object, orientation: Direction },
+    PlaceStructure { structure: Structure, orientation: Direction },
 }
 
 #[derive(PartialEq, Clone, Copy)]
