@@ -119,6 +119,10 @@ impl GameBoard {
         v.x <= BOARD_WIDTH && v.y <= BOARD_HEIGHT
     }
 
+    fn block_index(b: Block) -> usize {
+        ((b.y * BOARD_WIDTH) + b.x) as usize
+    }
+
     fn vertex_index(v: Vertex) -> usize {
         ((v.y * (BOARD_WIDTH + 1)) + v.x) as usize
     }
@@ -146,6 +150,32 @@ impl GameBoard {
         }
 
         LandType::Water
+    }
+
+    pub fn block_structure_type(&self, block: Block) -> Option<Structure> {
+        match self.block_occupants[Self::block_index(block)] {
+            Some(idx) => Some(self.structures[idx].structure),
+            None => None,
+        }
+    }
+
+    pub fn place_structure(&mut self, structure: Structure, orientation: Direction, origin: Block) {
+        let idx = self.structures.len();
+        let placement = StructurePlacement {
+            structure,
+            orientation,
+            origin,
+        };
+        self.structures.push(placement);
+        // Iterate over each block the structure covers and insert the index.
+        // TODO (toby): Pre-check if any block is already occupied and return a result.
+        let w = placement.width();
+        let h = placement.height();
+        for y in origin.y..origin.y + h as u32 {
+            for x in origin.x..origin.x + w as u32 {
+                self.block_occupants[Self::block_index(Block { x, y })] = Some(idx);
+            }
+        }
     }
 }
 
@@ -207,7 +237,25 @@ pub enum LandType {
 struct StructurePlacement {
     structure: Structure,
     orientation: Direction,
-    origin: Vertex,
+    origin: Block,
+}
+
+impl StructurePlacement {
+    fn width(&self) -> StructureDimension {
+        let (w, h) = self.structure.size();
+        match self.orientation {
+            Direction::North | Direction::South => w,
+            Direction::East | Direction::West => h,
+        }
+    }
+
+    fn height(&self) -> StructureDimension {
+        let (w, h) = self.structure.size();
+        match self.orientation {
+            Direction::North | Direction::South => h,
+            Direction::East | Direction::West => w,
+        }
+    }
 }
 
 #[derive(PartialEq, Clone, Copy)]

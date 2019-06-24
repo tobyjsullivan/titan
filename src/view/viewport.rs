@@ -1,7 +1,8 @@
 use crate::action::GameAction;
 use crate::controller::PlayerAction;
 use crate::state::{
-    Block, GameBoard, GameState, LandType, PlayerMode, SelectionMode, Vertex, WATER_LEVEL,
+    Block, GameBoard, GameState, LandType, PlayerMode, SelectionMode, Structure, Vertex,
+    WATER_LEVEL,
 };
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
@@ -22,6 +23,8 @@ const GRID_SCALE: f32 = 30.0;
 const COLOR_HIGHLIGHT_BLOCK: (u8, u8, u8, u8) = (255, 255, 255, 150);
 const COLOR_WATER: (u8, u8, u8) = (53, 117, 189);
 const COLOR_LAND: (u8, u8, u8) = (0, 200, 0);
+const COLOR_FOREST: (u8, u8, u8) = (47, 99, 67);
+const COLOR_RAIL_PLATFORM: (u8, u8, u8) = (245, 163, 0);
 
 pub struct Viewport {
     window_width: u32,
@@ -127,6 +130,9 @@ impl Viewport {
             (PlayerAction::WindowRightClick { .. }, PlayerMode::RaiseLower { .. }) => {
                 Some(GameAction::LowerTerrain)
             }
+            (PlayerAction::WindowLeftClick { .. }, PlayerMode::PlaceStructure { .. }) => {
+                Some(GameAction::PlaceStructure)
+            }
             _ => None,
         }
     }
@@ -198,6 +204,7 @@ impl Viewport {
         let draw_begin = Instant::now();
         let board_width = game.board.width();
         let board_height = game.board.height();
+        // Draw the ground layer.
         for y in 0..(board_height + 1) {
             // Skip any points outside viewport bounding box.
             if (y as f32) < min_y || (y as f32) > max_y {
@@ -228,6 +235,30 @@ impl Viewport {
                 let viewport_point = self.compute_viewport_point(game, world_point);
 
                 canvas.draw_point(viewport_point.to_renderable(self))?;
+            }
+        }
+
+        // Draw any structures.
+        for y in 0..board_height {
+            // Skip any blocks outside viewport bounding box.
+            if (y as f32) < min_y || (y as f32) > max_y {
+                continue;
+            }
+
+            for x in 0..board_width {
+                // Skip any blocks outside viewport bounding box.
+                if (x as f32) < min_x || (x as f32) > max_x {
+                    continue;
+                }
+
+                if let Some(structure) = game.board.block_structure_type(Block { x, y }) {
+                    let mut tile_color = match structure {
+                        Structure::Forest => Color::from(COLOR_FOREST),
+                        Structure::RailPlatform => Color::from(COLOR_RAIL_PLATFORM),
+                    };
+
+                    fill_block(canvas, &self, &game, x as i32, y as i32, tile_color)?;
+                }
             }
         }
 

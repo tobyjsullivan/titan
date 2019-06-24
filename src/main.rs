@@ -131,6 +131,9 @@ fn main() -> Result<(), String> {
                 Some(GameAction::OpenMenu { menu }) => {
                     systems::menu::apply_open_menu(&mut game, menu);
                 }
+                Some(GameAction::PlaceStructure) => {
+                    systems::structure::apply_place_structure(&mut game);
+                }
                 Some(GameAction::RaiseTerrain) => {
                     systems::terrain::apply_raise_terrain(&mut game);
                 }

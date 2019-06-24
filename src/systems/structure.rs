@@ -19,3 +19,16 @@ pub fn apply_rotate_structure(game: &mut GameState) {
         };
     }
 }
+
+pub fn apply_place_structure(game: &mut GameState) {
+    if let (
+        PlayerMode::PlaceStructure {
+            structure,
+            orientation,
+        },
+        Some(block),
+    ) = (game.player_mode, game.highlighted_block)
+    {
+        game.board.place_structure(structure, orientation, block);
+    }
+}
