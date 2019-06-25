@@ -3,7 +3,7 @@ use crate::state::{
     Block, GameBoard, GameState, LandType, PlayerMode, SelectionMode, Structure, Vertex,
     WATER_LEVEL,
 };
-use crate::view::PlayerAction;
+use crate::view::PlayerInteraction;
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::pixels::Color;
 use sdl2::rect;

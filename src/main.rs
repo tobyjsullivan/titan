@@ -13,7 +13,7 @@ use state::{GameState, PlayerMode};
 use std::ops::{Add, Sub};
 use std::thread;
 use std::time::{Duration, Instant};
-use view::{Interface, KeyboardKey, PlayerAction};
+use view::{Interface, KeyboardKey, PlayerInteraction};
 
 const TEXT_HEIGHT: u32 = 20;
 
@@ -60,7 +60,7 @@ fn main() -> Result<(), String> {
     let mut last_frame = Instant::now();
     let mut frame_count: u64 = 0;
     'running: loop {
-        let mut player_actions = Vec::new();
+        let mut player_interactions = Vec::new();
 
         for event in event_pump.poll_iter() {
             match event {
@@ -78,14 +78,14 @@ fn main() -> Result<(), String> {
                         _ => None,
                     };
                     if let Some(key) = key {
-                        player_actions.push(PlayerAction::KeyPress { key });
+                        player_interactions.push(PlayerInteraction::KeyPress { key });
                     }
                 }
                 Event::MouseMotion { x, y, .. } => {
                     let x = x * scale_x as i32;
                     let y = y * scale_y as i32;
-                    let player_action = PlayerAction::CursorMove { x, y };
-                    player_actions.push(player_action);
+                    let player_action = PlayerInteraction::CursorMove { x, y };
+                    player_interactions.push(player_action);
                 }
                 Event::MouseButtonDown {
                     x, y, mouse_btn, ..
@@ -93,12 +93,12 @@ fn main() -> Result<(), String> {
                     let x = x * scale_x as i32;
                     let y = y * scale_y as i32;
                     let player_action = match mouse_btn {
-                        MouseButton::Left => Some(PlayerAction::WindowLeftClick { x, y }),
-                        MouseButton::Right => Some(PlayerAction::WindowRightClick { x, y }),
+                        MouseButton::Left => Some(PlayerInteraction::WindowLeftClick { x, y }),
+                        MouseButton::Right => Some(PlayerInteraction::WindowRightClick { x, y }),
                         _ => None,
                     };
                     if let Some(player_action) = player_action {
-                        player_actions.push(player_action);
+                        player_interactions.push(player_action);
                     }
                 }
                 _ => {}
@@ -106,8 +106,8 @@ fn main() -> Result<(), String> {
         }
 
         // Resolve all actions.
-        for &player_action in player_actions.iter() {
-            match interface.map_player_action(&game, player_action) {
+        for &player_interaction in player_interactions.iter() {
+            match interface.map_player_interaction(&game, player_interaction) {
                 Some(GameAction::Hover { block }) => {
                     systems::navigation::apply_hover(&mut game, block)
                 }
