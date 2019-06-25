@@ -1,9 +1,6 @@
 use crate::action::GameAction;
-use crate::state::{
-    Block, GameBoard, GameState, LandType, PlayerMode, SelectionMode, Structure, Vertex,
-    WATER_LEVEL,
-};
-use sdl2::gfx::primitives::DrawRenderer;
+use crate::state::board::{Block, LandType, Structure, Vertex};
+use crate::state::game::{GameState, PlayerMode, SelectionMode};
 use sdl2::pixels::Color;
 use sdl2::rect;
 use sdl2::render::Canvas;

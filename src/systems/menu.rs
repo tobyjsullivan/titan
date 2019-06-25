@@ -1,4 +1,6 @@
-use crate::state::{Direction, GameState, PlayerMode, SidebarMenu, Structure};
+use crate::state::board::{Direction, Structure};
+use crate::state::game::{GameState, PlayerMode};
+use crate::state::menu::SidebarMenu;
 
 pub fn apply_open_menu(game: &mut GameState, menu: SidebarMenu) {
     game.open_menu = Some(menu);

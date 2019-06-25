@@ -9,7 +9,7 @@ use action::GameAction;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
-use state::{GameState, PlayerMode};
+use state::game::GameState;
 use std::ops::{Add, Sub};
 use std::thread;
 use std::time::{Duration, Instant};

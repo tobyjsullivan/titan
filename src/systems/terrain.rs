@@ -1,5 +1,5 @@
-use crate::action::GameAction;
-use crate::state::{GameBoard, GameState, Vertex};
+use crate::state::board::{Board, Vertex};
+use crate::state::game::GameState;
 
 const MIN_HEIGHT: u8 = 0;
 const MAX_HEIGHT: u8 = 6;
@@ -30,7 +30,7 @@ pub fn apply_raise_terrain(game: &mut GameState) {
     }
 }
 
-fn lower_vertex(mut board: &mut GameBoard, vertex: Vertex) -> Result<(), ()> {
+fn lower_vertex(mut board: &mut Board, vertex: Vertex) -> Result<(), ()> {
     println!("Trying to lower: {:?}", vertex);
     let prior_height = board.vertex_height(vertex);
     if prior_height <= MIN_HEIGHT {
@@ -64,7 +64,7 @@ fn lower_vertex(mut board: &mut GameBoard, vertex: Vertex) -> Result<(), ()> {
     Ok(())
 }
 
-fn raise_vertex(mut board: &mut GameBoard, vertex: Vertex) -> Result<(), ()> {
+fn raise_vertex(mut board: &mut Board, vertex: Vertex) -> Result<(), ()> {
     println!("Trying to raise: {:?}", vertex);
     let prior_height = board.vertex_height(vertex);
     if prior_height >= MAX_HEIGHT {

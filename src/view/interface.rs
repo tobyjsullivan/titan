@@ -2,7 +2,7 @@ use super::sidebar::Sidebar;
 use super::viewport::Viewport;
 use super::{KeyboardKey, PlayerInteraction, COLOR_DARK_GRAY};
 use crate::action::GameAction;
-use crate::state::GameState;
+use crate::state::game::GameState;
 use sdl2::render::{Canvas, TextureCreator};
 use sdl2::video::Window;
 

@@ -1,6 +1,6 @@
 use crate::action::GameAction;
-use crate::state::{Direction, GameState, PlayerMode, SidebarMenu};
-use sdl2::gfx::primitives::DrawRenderer;
+use crate::state::game::GameState;
+use crate::state::menu::SidebarMenu;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;

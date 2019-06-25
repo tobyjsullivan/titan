@@ -8,58 +8,14 @@ pub type VertexHeight = u8;
 pub type VertexPosition = u32;
 pub type BlockPosition = u32;
 
-pub struct GameState {
-    pub board: GameBoard,
-    pub focal_point: Vertex,
-    pub player_mode: PlayerMode,
-    pub highlighted_block: Option<Block>,
-    pub highlighted_button: Option<SidebarMenu>,
-    pub open_menu: Option<SidebarMenu>,
-}
-
-impl GameState {
-    pub fn new() -> Self {
-        Self {
-            board: GameBoard::new(),
-            focal_point: Vertex { x: 10, y: 20 },
-            // player_mode: PlayerMode::Focus,
-            player_mode: PlayerMode::PlaceStructure {
-                structure: Structure::Forest,
-                orientation: Direction::North,
-            },
-            // player_mode: PlayerMode::RaiseLower { radius: 0 },
-            highlighted_block: None,
-            highlighted_button: None,
-            open_menu: None,
-        }
-    }
-
-    pub fn selection_mode(&self) -> SelectionMode {
-        match self.player_mode {
-            PlayerMode::Focus => SelectionMode::None,
-            PlayerMode::PlaceStructure {
-                structure,
-                orientation,
-            } => {
-                let (w, h) = structure.size();
-                match orientation {
-                    Direction::North | Direction::South => SelectionMode::Blocks { w, h },
-                    Direction::East | Direction::West => SelectionMode::Blocks { w: h, h: w },
-                }
-            }
-            PlayerMode::RaiseLower { radius } => SelectionMode::Vertex { radius },
-        }
-    }
-}
-
-pub struct GameBoard {
+pub struct Board {
     vertices: [VertexHeight; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
     structures: Vec<StructurePlacement>,
     block_occupants: [Option<usize>; (BOARD_WIDTH * BOARD_HEIGHT) as usize],
 }
 
-impl GameBoard {
-    fn new() -> Self {
+impl Board {
+    pub fn new() -> Self {
         let mut res = Self {
             vertices: [WATER_LEVEL; ((BOARD_WIDTH + 1) * (BOARD_HEIGHT + 1)) as usize],
             structures: Vec::new(),
@@ -177,25 +133,6 @@ impl GameBoard {
             }
         }
     }
-}
-
-#[derive(PartialEq, Copy, Clone)]
-pub enum SidebarMenu {
-    Close,
-    Save,
-    Music,
-    Graphics,
-    Help,
-    Rotation,
-    Metrics,
-    Finances,
-    News,
-    Info,
-    Navigation,
-    Building,
-    Rail,
-    Demolish,
-    Point,
 }
 
 #[derive(PartialEq, Copy, Clone)]
@@ -325,7 +262,7 @@ pub enum Structure {
 }
 
 impl Structure {
-    fn size(&self) -> (StructureDimension, StructureDimension) {
+    pub fn size(&self) -> (StructureDimension, StructureDimension) {
         match self {
             Structure::Forest => (1, 1),
             Structure::CityRoad => (1, 1),
@@ -378,23 +315,4 @@ pub enum Direction {
     East,
     South,
     West,
-}
-
-#[derive(PartialEq, Clone, Copy)]
-pub enum PlayerMode {
-    Focus,
-    RaiseLower {
-        radius: u8,
-    },
-    PlaceStructure {
-        structure: Structure,
-        orientation: Direction,
-    },
-}
-
-#[derive(PartialEq, Clone, Copy)]
-pub enum SelectionMode {
-    None,
-    Vertex { radius: u8 },
-    Blocks { w: u8, h: u8 },
 }

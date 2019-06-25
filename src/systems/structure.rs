@@ -1,4 +1,5 @@
-use crate::state::{Direction, GameState, PlayerMode};
+use crate::state::board::Direction;
+use crate::state::game::{GameState, PlayerMode};
 
 pub fn apply_rotate_structure(game: &mut GameState) {
     if let PlayerMode::PlaceStructure {
