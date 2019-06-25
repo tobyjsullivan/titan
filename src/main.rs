@@ -7,7 +7,7 @@ mod systems;
 mod view;
 
 use action::GameAction;
-use controller::{PlayerAction, WindowPanel};
+use controller::PlayerAction;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -15,12 +15,10 @@ use state::{GameState, PlayerMode};
 use std::ops::{Add, Sub};
 use std::thread;
 use std::time::{Duration, Instant};
-use view::sidebar::Sidebar;
-use view::viewport::Viewport;
-use view::COLOR_DARK_GRAY;
+use view::Interface;
+use view::WindowPanel;
 
-const WINDOW_WIDTH: u32 = 800;
-const WINDOW_HEIGHT: u32 = 600;
+const TEXT_HEIGHT: u32 = 20;
 
 const SIDEBAR_WIDTH: u32 = 160;
 
@@ -32,7 +30,7 @@ fn main() -> Result<(), String> {
     let vid_subsystem = sdl_ctx.video()?;
 
     let window = vid_subsystem
-        .window("Titan", WINDOW_WIDTH, WINDOW_HEIGHT)
+        .window("Titan", 800, 600)
         .position_centered()
         .allow_highdpi()
         .fullscreen_desktop()
@@ -50,18 +48,14 @@ fn main() -> Result<(), String> {
 
     let mut event_pump = sdl_ctx.event_pump()?;
 
-    let mut viewport = Viewport::new(
-        window_width * scale_x - SIDEBAR_WIDTH * scale_x,
-        window_height * scale_y,
-        SIDEBAR_WIDTH * scale_x,
-    );
-    let mut sidebar = Sidebar::new(
+    let interface = Interface::new(
         texture_creator,
+        drawable_x,
+        drawable_y,
+        TEXT_HEIGHT * scale_y,
         SIDEBAR_WIDTH * scale_x,
-        window_height * scale_y,
-        scale_x,
-        scale_y,
     );
+
     let mut game = GameState::new();
 
     let update_interval = Duration::new(0, 1_000_000_000 / UPDATES_PER_SECOND);
@@ -85,26 +79,30 @@ fn main() -> Result<(), String> {
                     player_actions.push(PlayerAction::PressSpace);
                 }
                 Event::MouseMotion { x, y, .. } => {
+                    let x = x * scale_x as i32;
+                    let y = y * scale_y as i32;
                     let player_action = PlayerAction::CursorMove {
-                        panel: window_panel(x, y),
-                        x: x * scale_x as i32,
-                        y: y * scale_y as i32,
+                        panel: interface.window_panel(x, y),
+                        x,
+                        y,
                     };
                     player_actions.push(player_action);
                 }
                 Event::MouseButtonDown {
                     x, y, mouse_btn, ..
                 } => {
+                    let x = x * scale_x as i32;
+                    let y = y * scale_y as i32;
                     let player_action = match mouse_btn {
                         MouseButton::Left => Some(PlayerAction::WindowLeftClick {
-                            panel: window_panel(x, y),
-                            x: x * scale_x as i32,
-                            y: y * scale_y as i32,
+                            panel: interface.window_panel(x, y),
+                            x,
+                            y,
                         }),
                         MouseButton::Right => Some(PlayerAction::WindowRightClick {
-                            panel: window_panel(x, y),
-                            x: x * scale_x as i32,
-                            y: y * scale_y as i32,
+                            panel: interface.window_panel(x, y),
+                            x,
+                            y,
                         }),
                         _ => None,
                     };
@@ -118,7 +116,12 @@ fn main() -> Result<(), String> {
 
         // Resolve all actions.
         for &player_action in player_actions.iter() {
-            match controller::map_player_action(&sidebar, &viewport, &game, player_action) {
+            match controller::map_player_action(
+                &interface.sidebar,
+                &interface.viewport,
+                &game,
+                player_action,
+            ) {
                 Some(GameAction::Hover { block }) => {
                     systems::navigation::apply_hover(&mut game, block)
                 }
@@ -151,13 +154,7 @@ fn main() -> Result<(), String> {
 
         if last_frame.elapsed() > Duration::new(0, 1_000_000_000 / MAX_FRAMES_PER_SECOND) {
             let render_start = Instant::now();
-            canvas.set_draw_color(COLOR_DARK_GRAY);
-            canvas.clear();
-
-            viewport.render(&mut canvas, &game)?;
-            sidebar.render(&mut canvas, &game)?;
-            canvas.present();
-
+            interface.render(&mut canvas, &game)?;
             frame_count += 1;
             // println!("Frame {}: {:?}", frame_count, render_start.elapsed());
             last_frame = Instant::now();
@@ -171,12 +168,4 @@ fn main() -> Result<(), String> {
     }
 
     Ok(())
-}
-
-fn window_panel(x: i32, y: i32) -> WindowPanel {
-    if x <= SIDEBAR_WIDTH as i32 {
-        WindowPanel::Sidebar
-    } else {
-        WindowPanel::Viewport
-    }
 }

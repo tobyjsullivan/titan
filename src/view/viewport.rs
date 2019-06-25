@@ -106,8 +106,8 @@ impl Viewport {
             },
         );
 
-        let mut cur_block_x = world_point.x as i32;
-        let mut cur_block_y = world_point.y as i32;
+        let cur_block_x = world_point.x as i32;
+        let cur_block_y = world_point.y as i32;
         if world_point.x < 0.0 {
             None
         } else if world_point.y < 0.0 {
@@ -225,7 +225,7 @@ impl Viewport {
                 }
 
                 if x < board_width && y < board_height {
-                    let mut tile_color = match game.board.block_land_type(x, y) {
+                    let tile_color = match game.board.block_land_type(x, y) {
                         LandType::Water => Color::from(COLOR_WATER),
                         LandType::Land => Color::from(COLOR_LAND),
                     };

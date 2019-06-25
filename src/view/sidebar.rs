@@ -1,6 +1,7 @@
 use crate::action::GameAction;
-use crate::controller::{PlayerAction, WindowPanel};
+use crate::controller::PlayerAction;
 use crate::state::{Direction, GameState, PlayerMode, SidebarMenu};
+use crate::view::WindowPanel;
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
@@ -12,15 +13,12 @@ const COLOR_SIDEBAR: (u8, u8, u8) = (132, 132, 123);
 const COLOR_DEPRESSED_BUTTON_OUTLINE: (u8, u8, u8) = (255, 0, 0);
 const COLOR_DEPRESSED_BUTTON_BACKGROUND: (u8, u8, u8, u8) = (255, 255, 255, 100);
 
-const BUTTON_GRID_OFFSET_Y: u32 = 60;
-const BUTTON_WIDTH: u32 = 32;
-const BUTTON_HEIGHT: u32 = 32;
+const BUTTONS_PER_ROW: u32 = 5;
 
 pub struct Sidebar {
-    scale_x: u32,
-    scale_y: u32,
     width: u32,
     height: u32,
+    text_height: u32,
     button_textures: [Texture; 15],
 }
 
@@ -29,14 +27,12 @@ impl Sidebar {
         texture_creator: TextureCreator<T>,
         width: u32,
         height: u32,
-        scale_x: u32,
-        scale_y: u32,
+        text_height: u32,
     ) -> Self {
         Self {
-            scale_x,
-            scale_y,
             width,
             height,
+            text_height,
             button_textures: [
                 texture_creator.load_texture("art/close_128.png").unwrap(),
                 texture_creator.load_texture("art/save_128.png").unwrap(),
@@ -61,7 +57,7 @@ impl Sidebar {
 
     pub fn map_player_action(
         &self,
-        game: &GameState,
+        _game: &GameState,
         player_action: PlayerAction,
     ) -> Option<GameAction> {
         match player_action {
@@ -76,7 +72,7 @@ impl Sidebar {
                 panel: WindowPanel::Sidebar,
                 x,
                 y,
-            } => match game.highlighted_button {
+            } => match self.button_under_cursor(x, y) {
                 Some(menu) => Some(GameAction::OpenMenu { menu }),
                 None => None,
             },
@@ -111,10 +107,13 @@ impl Sidebar {
     }
 
     fn button_under_cursor(&self, x: i32, y: i32) -> Option<SidebarMenu> {
+        let button_width = self.width / BUTTONS_PER_ROW;
+        let button_height = button_width; // Square buttons
+        let button_grid_offset_y = self.text_height * 3;
+
         match (
-            x / (BUTTON_WIDTH * self.scale_x) as i32,
-            (y - (BUTTON_GRID_OFFSET_Y * self.scale_y) as i32)
-                / (BUTTON_HEIGHT * self.scale_y) as i32,
+            x / button_width as i32,
+            (y - button_grid_offset_y as i32) / button_height as i32,
         ) {
             (0, 0) => Some(SidebarMenu::Close),
             (1, 0) => Some(SidebarMenu::Save),
@@ -144,11 +143,14 @@ impl Sidebar {
         game: &GameState,
         button: SidebarMenu,
     ) -> Result<(), String> {
-        let left = (button_column(button) * BUTTON_WIDTH * self.scale_x) as i32;
-        let top = (button_row(button) * BUTTON_HEIGHT * self.scale_y
-            + BUTTON_GRID_OFFSET_Y * self.scale_y) as i32;
-        let width = BUTTON_WIDTH * self.scale_x;
-        let height = BUTTON_HEIGHT * self.scale_y;
+        let button_width = self.width / BUTTONS_PER_ROW;
+        let button_height = button_width; // Square buttons
+        let button_grid_offset_y = self.text_height * 3;
+
+        let left = (button_column(button) * button_width) as i32;
+        let top = (button_row(button) * button_height + button_grid_offset_y) as i32;
+        let width = button_width;
+        let height = button_height;
 
         let rect = Rect::new(left, top, width, height);
 

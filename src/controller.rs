@@ -2,12 +2,7 @@ use crate::action::GameAction;
 use crate::state::GameState;
 use crate::view::sidebar::Sidebar;
 use crate::view::viewport::Viewport;
-
-#[derive(PartialEq, Clone, Copy)]
-pub enum WindowPanel {
-    Sidebar,
-    Viewport,
-}
+use crate::view::WindowPanel;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum PlayerAction {
