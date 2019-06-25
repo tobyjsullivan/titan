@@ -1,12 +1,16 @@
+use super::screens::building::BuyBuildingScreen;
 use super::sidebar::Sidebar;
 use super::viewport::Viewport;
 use super::{KeyboardKey, PlayerInteraction, COLOR_DARK_GRAY};
 use crate::action::GameAction;
 use crate::state::game::GameState;
+use crate::state::menu::building::BuyBuildingScreenState;
 use sdl2::render::{Canvas, TextureCreator};
+use sdl2::ttf::Font;
 use sdl2::video::Window;
 
 pub struct Interface {
+    buy_building_screen: BuyBuildingScreen,
     viewport: Viewport,
     sidebar: Sidebar,
     sidebar_width: u32,
@@ -15,14 +19,21 @@ pub struct Interface {
 impl Interface {
     pub fn new<T>(
         texture_creator: TextureCreator<T>,
+        font: Font,
         window_width: u32,
         window_height: u32,
         text_height: u32,
         sidebar_width: u32,
     ) -> Self {
         Self {
+            buy_building_screen: BuyBuildingScreen::new(
+                &texture_creator,
+                font,
+                window_width,
+                window_height,
+            ),
             viewport: Viewport::new(window_width - sidebar_width, window_height, sidebar_width),
-            sidebar: Sidebar::new(texture_creator, sidebar_width, window_height, text_height),
+            sidebar: Sidebar::new(&texture_creator, sidebar_width, window_height, text_height),
             sidebar_width,
         }
     }
@@ -57,6 +68,14 @@ impl Interface {
 
         self.viewport.render(canvas, &game)?;
         self.sidebar.render(canvas, &game)?;
+        if let BuyBuildingScreenState::Visible {
+            selected_building,
+            selected_category,
+        } = game.buy_building_screen
+        {
+            self.buy_building_screen.render(canvas)?;
+        }
+
         canvas.present();
 
         Ok(())

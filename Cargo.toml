@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies.sdl2]
 version = "0.32"
 default-features = false
-features = ["gfx", "image", "unsafe_textures"]
+features = ["gfx", "image", "ttf", "unsafe_textures"]
 
 [features]
 unsafe_textures = []

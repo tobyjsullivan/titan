@@ -1,6 +1,6 @@
 use crate::action::GameAction;
 use crate::state::game::GameState;
-use crate::state::menu::SidebarMenu;
+use crate::state::menu::sidebar::SidebarMenu;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -22,7 +22,7 @@ pub struct Sidebar {
 
 impl Sidebar {
     pub fn new<T>(
-        texture_creator: TextureCreator<T>,
+        texture_creator: &TextureCreator<T>,
         width: u32,
         height: u32,
         text_height: u32,

@@ -1,5 +1,5 @@
 use crate::state::board::Block;
-use crate::state::menu::SidebarMenu;
+use crate::state::menu::sidebar::SidebarMenu;
 
 pub enum GameAction {
     Hover { block: Option<Block> },

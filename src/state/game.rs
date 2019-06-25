@@ -1,21 +1,22 @@
 use super::board::{Block, Board, Direction, Structure, Vertex};
-use super::menu::{Menu, SidebarMenu};
+use super::menu::building::BuyBuildingScreenState;
+use super::menu::sidebar::SidebarMenu;
 
 pub struct GameState {
-    pub active_menu: Option<Menu>,
     pub board: Board,
+    pub buy_building_screen: BuyBuildingScreenState,
     pub focal_point: Vertex,
-    pub player_mode: PlayerMode,
     pub highlighted_block: Option<Block>,
     pub highlighted_button: Option<SidebarMenu>,
     pub open_menu: Option<SidebarMenu>,
+    pub player_mode: PlayerMode,
 }
 
 impl GameState {
     pub fn new() -> Self {
         Self {
-            active_menu: None,
             board: Board::new(),
+            buy_building_screen: BuyBuildingScreenState::Hidden,
             focal_point: Vertex { x: 10, y: 20 },
             // player_mode: PlayerMode::Focus,
             player_mode: PlayerMode::PlaceStructure {

@@ -1,6 +1,6 @@
 use crate::state::board::Block;
 use crate::state::game::GameState;
-use crate::state::menu::SidebarMenu;
+use crate::state::menu::sidebar::SidebarMenu;
 
 pub fn apply_focus(game: &mut GameState) {
     if let Some(block) = game.highlighted_block {

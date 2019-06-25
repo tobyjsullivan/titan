@@ -1,4 +1,5 @@
 mod interface;
+mod screens;
 mod sidebar;
 mod viewport;
 

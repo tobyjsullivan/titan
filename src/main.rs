@@ -16,6 +16,7 @@ use std::time::{Duration, Instant};
 use view::{Interface, KeyboardKey, PlayerInteraction};
 
 const TEXT_HEIGHT: u32 = 20;
+const FONT_POINT_SIZE: u16 = 128;
 
 const SIDEBAR_WIDTH: u32 = 160;
 
@@ -25,6 +26,7 @@ const MAX_FRAMES_PER_SECOND: u32 = 60;
 fn main() -> Result<(), String> {
     let sdl_ctx = sdl2::init()?;
     let vid_subsystem = sdl_ctx.video()?;
+    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
     let window = vid_subsystem
         .window("Titan", 800, 600)
@@ -43,10 +45,14 @@ fn main() -> Result<(), String> {
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     let texture_creator = canvas.texture_creator();
 
+    // Load main font.
+    let font = ttf_context.load_font("font/roboto_mono-regular.ttf", FONT_POINT_SIZE)?;
+
     let mut event_pump = sdl_ctx.event_pump()?;
 
     let interface = Interface::new(
         texture_creator,
+        font,
         drawable_x,
         drawable_y,
         TEXT_HEIGHT * scale_y,

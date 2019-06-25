@@ -1,18 +1,22 @@
-pub enum Menu {
-    BuyBuilding {
-        selected_category: BuyBuildingCategory,
-        selected_building: BuyBuildingBuilding,
+#[derive(PartialEq, Copy, Clone)]
+pub enum BuyBuildingScreenState {
+    Visible {
+        selected_building: Building,
+        selected_category: Category,
     },
+    Hidden,
 }
 
-pub enum BuyBuildingCategory {
+#[derive(PartialEq, Copy, Clone)]
+pub enum Category {
     Terminals,
     Production,
     Retail,
     CityBuildings,
 }
 
-pub enum BuyBuildingBuilding {
+#[derive(PartialEq, Copy, Clone)]
+pub enum Building {
     // Terminals
     TruckDepot,
     TrainStation,
@@ -49,23 +53,4 @@ pub enum BuyBuildingBuilding {
     RaceTrack,
     University,
     AmusementPark,
-}
-
-#[derive(PartialEq, Copy, Clone)]
-pub enum SidebarMenu {
-    Close,
-    Save,
-    Music,
-    Graphics,
-    Help,
-    Rotation,
-    Metrics,
-    Finances,
-    News,
-    Info,
-    Navigation,
-    Building,
-    Rail,
-    Demolish,
-    Point,
 }
