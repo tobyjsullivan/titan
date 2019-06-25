@@ -13,7 +13,7 @@ use state::{GameState, PlayerMode};
 use std::ops::{Add, Sub};
 use std::thread;
 use std::time::{Duration, Instant};
-use view::{Interface, PlayerAction, WindowPanel};
+use view::{Interface, KeyboardKey, PlayerAction};
 
 const TEXT_HEIGHT: u32 = 20;
 
@@ -70,19 +70,21 @@ fn main() -> Result<(), String> {
                     ..
                 } => break 'running,
                 Event::KeyDown {
-                    keycode: Some(Keycode::Space),
+                    keycode: Some(keycode),
                     ..
                 } => {
-                    player_actions.push(PlayerAction::PressSpace);
+                    let key = match keycode {
+                        Keycode::Space => Some(KeyboardKey::Space),
+                        _ => None,
+                    };
+                    if let Some(key) = key {
+                        player_actions.push(PlayerAction::KeyPress { key });
+                    }
                 }
                 Event::MouseMotion { x, y, .. } => {
                     let x = x * scale_x as i32;
                     let y = y * scale_y as i32;
-                    let player_action = PlayerAction::CursorMove {
-                        panel: interface.window_panel(x, y),
-                        x,
-                        y,
-                    };
+                    let player_action = PlayerAction::CursorMove { x, y };
                     player_actions.push(player_action);
                 }
                 Event::MouseButtonDown {
@@ -91,16 +93,8 @@ fn main() -> Result<(), String> {
                     let x = x * scale_x as i32;
                     let y = y * scale_y as i32;
                     let player_action = match mouse_btn {
-                        MouseButton::Left => Some(PlayerAction::WindowLeftClick {
-                            panel: interface.window_panel(x, y),
-                            x,
-                            y,
-                        }),
-                        MouseButton::Right => Some(PlayerAction::WindowRightClick {
-                            panel: interface.window_panel(x, y),
-                            x,
-                            y,
-                        }),
+                        MouseButton::Left => Some(PlayerAction::WindowLeftClick { x, y }),
+                        MouseButton::Right => Some(PlayerAction::WindowRightClick { x, y }),
                         _ => None,
                     };
                     if let Some(player_action) = player_action {

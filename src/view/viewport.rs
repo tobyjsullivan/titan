@@ -120,28 +120,29 @@ impl Viewport {
         }
     }
 
-    pub fn map_player_action(
-        &self,
-        game: &GameState,
-        player_action: PlayerAction,
-    ) -> Option<GameAction> {
-        match (player_action, &game.player_mode) {
-            (PlayerAction::CursorMove { x, y, .. }, _) => Some(GameAction::Hover {
-                block: self.get_block_under_cursor(&game, x, y),
-            }),
-            (PlayerAction::PressSpace, _) => Some(GameAction::RotateStructure),
-            (PlayerAction::WindowLeftClick { .. }, PlayerMode::Focus) => Some(GameAction::Focus),
-            (PlayerAction::WindowLeftClick { .. }, PlayerMode::RaiseLower { .. }) => {
-                Some(GameAction::RaiseTerrain)
-            }
-            (PlayerAction::WindowRightClick { .. }, PlayerMode::RaiseLower { .. }) => {
-                Some(GameAction::LowerTerrain)
-            }
-            (PlayerAction::WindowLeftClick { .. }, PlayerMode::PlaceStructure { .. }) => {
-                Some(GameAction::PlaceStructure)
-            }
+    pub fn cursor_move_action(&self, game: &GameState, x: i32, y: i32) -> Option<GameAction> {
+        Some(GameAction::Hover {
+            block: self.get_block_under_cursor(game, x, y),
+        })
+    }
+
+    pub fn left_click_action(&self, game: &GameState) -> Option<GameAction> {
+        match &game.player_mode {
+            PlayerMode::Focus => Some(GameAction::Focus),
+            PlayerMode::RaiseLower { .. } => Some(GameAction::RaiseTerrain),
+            PlayerMode::PlaceStructure { .. } => Some(GameAction::PlaceStructure),
+        }
+    }
+
+    pub fn right_click_action(&self, game: &GameState) -> Option<GameAction> {
+        match &game.player_mode {
+            PlayerMode::RaiseLower { .. } => Some(GameAction::LowerTerrain),
             _ => None,
         }
+    }
+
+    pub fn spacebar_action(&self, game: &GameState) -> Option<GameAction> {
+        Some(GameAction::RotateStructure)
     }
 
     pub fn render(&self, canvas: &mut Canvas<Window>, game: &GameState) -> Result<(), String> {

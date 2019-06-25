@@ -54,28 +54,16 @@ impl Sidebar {
         }
     }
 
-    pub fn map_player_action(
-        &self,
-        _game: &GameState,
-        player_action: PlayerAction,
-    ) -> Option<GameAction> {
-        match player_action {
-            PlayerAction::CursorMove {
-                panel: WindowPanel::Sidebar,
-                x,
-                y,
-            } => Some(GameAction::SidebarHover {
-                button: self.button_under_cursor(x, y),
-            }),
-            PlayerAction::WindowLeftClick {
-                panel: WindowPanel::Sidebar,
-                x,
-                y,
-            } => match self.button_under_cursor(x, y) {
-                Some(menu) => Some(GameAction::OpenMenu { menu }),
-                None => None,
-            },
-            _ => None,
+    pub fn cursor_move_action(&self, x: i32, y: i32) -> Option<GameAction> {
+        Some(GameAction::SidebarHover {
+            button: self.button_under_cursor(x, y),
+        })
+    }
+
+    pub fn left_click_action(&self, x: i32, y: i32) -> Option<GameAction> {
+        match self.button_under_cursor(x, y) {
+            Some(menu) => Some(GameAction::OpenMenu { menu }),
+            None => None,
         }
     }
 

@@ -13,22 +13,21 @@ pub const COLOR_DARK_GRAY: (u8, u8, u8) = (37, 37, 37);
 pub const COLOR_BLACK: (u8, u8, u8) = (0, 0, 0);
 
 #[derive(PartialEq, Clone, Copy)]
-pub enum WindowPanel {
-    Sidebar,
-    Viewport,
+pub enum PlayerAction {
+    CursorMove { x: i32, y: i32 },
+    WindowLeftClick { x: i32, y: i32 },
+    WindowRightClick { x: i32, y: i32 },
+    KeyPress { key: KeyboardKey },
 }
 
 #[derive(PartialEq, Clone, Copy)]
-pub enum PlayerAction {
-    CursorMove { panel: WindowPanel, x: i32, y: i32 },
-    WindowLeftClick { panel: WindowPanel, x: i32, y: i32 },
-    WindowRightClick { panel: WindowPanel, x: i32, y: i32 },
-    PressSpace,
+pub enum KeyboardKey {
+    Space,
 }
 
 pub struct Interface {
-    pub viewport: Viewport,
-    pub sidebar: Sidebar,
+    viewport: Viewport,
+    sidebar: Sidebar,
     sidebar_width: u32,
 }
 
@@ -61,33 +60,21 @@ impl Interface {
         player_action: PlayerAction,
     ) -> Option<GameAction> {
         match player_action {
-            cursor_move @ PlayerAction::CursorMove {
-                panel: WindowPanel::Sidebar,
-                ..
-            } => self.sidebar.map_player_action(game, cursor_move),
-            click @ PlayerAction::WindowLeftClick {
-                panel: WindowPanel::Sidebar,
-                ..
-            } => self.sidebar.map_player_action(game, click),
-            click @ PlayerAction::WindowRightClick {
-                panel: WindowPanel::Sidebar,
-                ..
-            } => self.sidebar.map_player_action(game, click),
-            cursor_move @ PlayerAction::CursorMove {
-                panel: WindowPanel::Viewport,
-                ..
-            } => self.viewport.map_player_action(game, cursor_move),
-            click @ PlayerAction::WindowLeftClick {
-                panel: WindowPanel::Viewport,
-                ..
-            } => self.viewport.map_player_action(game, click),
-            click @ PlayerAction::WindowRightClick {
-                panel: WindowPanel::Viewport,
-                ..
-            } => self.viewport.map_player_action(game, click),
-            PlayerAction::PressSpace => self
-                .viewport
-                .map_player_action(game, PlayerAction::PressSpace),
+            PlayerAction::CursorMove { x, y } => match self.window_panel(x, y) {
+                WindowPanel::Sidebar => self.sidebar.cursor_move_action(x, y),
+                WindowPanel::Viewport => self.viewport.cursor_move_action(game, x, y),
+            },
+            PlayerAction::WindowLeftClick { x, y } => match self.window_panel(x, y) {
+                WindowPanel::Sidebar => self.sidebar.left_click_action(x, y),
+                WindowPanel::Viewport => self.viewport.left_click_action(game),
+            },
+            PlayerAction::WindowRightClick { x, y } => match self.window_panel(x, y) {
+                WindowPanel::Sidebar => None,
+                WindowPanel::Viewport => self.viewport.right_click_action(game),
+            },
+            PlayerAction::KeyPress {
+                key: KeyboardKey::Space,
+            } => self.viewport.spacebar_action(game),
         }
     }
 
@@ -101,4 +88,10 @@ impl Interface {
 
         Ok(())
     }
+}
+
+#[derive(PartialEq, Clone, Copy)]
+enum WindowPanel {
+    Sidebar,
+    Viewport,
 }
