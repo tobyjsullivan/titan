@@ -1,6 +1,7 @@
 pub mod sidebar;
 pub mod viewport;
 
+use crate::action::GameAction;
 use crate::state::GameState;
 use sdl2::render::{Canvas, TextureCreator};
 use sdl2::video::Window;
@@ -15,6 +16,14 @@ pub const COLOR_BLACK: (u8, u8, u8) = (0, 0, 0);
 pub enum WindowPanel {
     Sidebar,
     Viewport,
+}
+
+#[derive(PartialEq, Clone, Copy)]
+pub enum PlayerAction {
+    CursorMove { panel: WindowPanel, x: i32, y: i32 },
+    WindowLeftClick { panel: WindowPanel, x: i32, y: i32 },
+    WindowRightClick { panel: WindowPanel, x: i32, y: i32 },
+    PressSpace,
 }
 
 pub struct Interface {
@@ -43,6 +52,42 @@ impl Interface {
             WindowPanel::Sidebar
         } else {
             WindowPanel::Viewport
+        }
+    }
+
+    pub fn map_player_action(
+        &self,
+        game: &GameState,
+        player_action: PlayerAction,
+    ) -> Option<GameAction> {
+        match player_action {
+            cursor_move @ PlayerAction::CursorMove {
+                panel: WindowPanel::Sidebar,
+                ..
+            } => self.sidebar.map_player_action(game, cursor_move),
+            click @ PlayerAction::WindowLeftClick {
+                panel: WindowPanel::Sidebar,
+                ..
+            } => self.sidebar.map_player_action(game, click),
+            click @ PlayerAction::WindowRightClick {
+                panel: WindowPanel::Sidebar,
+                ..
+            } => self.sidebar.map_player_action(game, click),
+            cursor_move @ PlayerAction::CursorMove {
+                panel: WindowPanel::Viewport,
+                ..
+            } => self.viewport.map_player_action(game, cursor_move),
+            click @ PlayerAction::WindowLeftClick {
+                panel: WindowPanel::Viewport,
+                ..
+            } => self.viewport.map_player_action(game, click),
+            click @ PlayerAction::WindowRightClick {
+                panel: WindowPanel::Viewport,
+                ..
+            } => self.viewport.map_player_action(game, click),
+            PlayerAction::PressSpace => self
+                .viewport
+                .map_player_action(game, PlayerAction::PressSpace),
         }
     }
 

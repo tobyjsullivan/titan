@@ -1,13 +1,11 @@
 extern crate sdl2;
 
 mod action;
-mod controller;
 mod state;
 mod systems;
 mod view;
 
 use action::GameAction;
-use controller::PlayerAction;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -15,8 +13,7 @@ use state::{GameState, PlayerMode};
 use std::ops::{Add, Sub};
 use std::thread;
 use std::time::{Duration, Instant};
-use view::Interface;
-use view::WindowPanel;
+use view::{Interface, PlayerAction, WindowPanel};
 
 const TEXT_HEIGHT: u32 = 20;
 
@@ -116,12 +113,7 @@ fn main() -> Result<(), String> {
 
         // Resolve all actions.
         for &player_action in player_actions.iter() {
-            match controller::map_player_action(
-                &interface.sidebar,
-                &interface.viewport,
-                &game,
-                player_action,
-            ) {
+            match interface.map_player_action(&game, player_action) {
                 Some(GameAction::Hover { block }) => {
                     systems::navigation::apply_hover(&mut game, block)
                 }
