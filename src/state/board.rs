@@ -199,6 +199,7 @@ impl StructurePlacement {
 pub enum Mineral {
     Gold,
     Silver,
+    Diamonds,
 }
 
 #[derive(PartialEq, Clone, Copy)]
