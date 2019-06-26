@@ -6,7 +6,6 @@ use crate::action::GameAction;
 use crate::state::game::GameState;
 use crate::state::menu::building::BuyBuildingScreenState;
 use sdl2::render::{Canvas, TextureCreator};
-use sdl2::ttf::Font;
 use sdl2::video::Window;
 
 pub struct Interface {
@@ -19,18 +18,20 @@ pub struct Interface {
 impl Interface {
     pub fn new<T>(
         texture_creator: TextureCreator<T>,
-        font: Font,
         window_width: u32,
         window_height: u32,
+        dialog_width: u32,
+        dialog_height: u32,
         text_height: u32,
         sidebar_width: u32,
     ) -> Self {
         Self {
             buy_building_screen: BuyBuildingScreen::new(
                 &texture_creator,
-                font,
                 window_width,
                 window_height,
+                dialog_width,
+                dialog_height,
             ),
             viewport: Viewport::new(window_width - sidebar_width, window_height, sidebar_width),
             sidebar: Sidebar::new(&texture_creator, sidebar_width, window_height, text_height),
