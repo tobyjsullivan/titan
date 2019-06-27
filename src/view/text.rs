@@ -17,12 +17,11 @@ impl DynamicText {
         }
     }
 
-    pub fn print<T: RenderTarget>(&self, canvas: &mut Canvas<T>, dst: Point) -> Result<(), String> {
+    pub fn print<T: RenderTarget>(&self, canvas: &mut Canvas<T>, content: &str, dst: Point) -> Result<(), String> {
         let text_scale = self.text_height as f32 / SOURCE_TEXT_HEIGHT as f32;
-        let sample = "Sample Text";
 
         let mut offset: u32 = 0;
-        for c in sample.chars() {
+        for c in content.chars() {
             let y = Self::char_index(c) * SOURCE_TEXT_HEIGHT;
             let width = Self::char_width(c);
             let src = Rect::new(0, y as i32, SOURCE_TEXT_HEIGHT, width);
