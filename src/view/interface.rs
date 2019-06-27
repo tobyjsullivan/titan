@@ -1,5 +1,6 @@
 use super::screens::building::BuyBuildingScreen;
 use super::sidebar::Sidebar;
+use super::text::DynamicText;
 use super::viewport::Viewport;
 use super::{KeyboardKey, PlayerInteraction, COLOR_DARK_GRAY};
 use crate::action::GameAction;
@@ -7,6 +8,7 @@ use crate::state::game::GameState;
 use crate::state::menu::building::BuyBuildingScreenState;
 use sdl2::render::{Canvas, TextureCreator};
 use sdl2::video::Window;
+use std::rc::Rc;
 
 pub struct Interface {
     buy_building_screen: BuyBuildingScreen,
@@ -18,6 +20,7 @@ pub struct Interface {
 impl Interface {
     pub fn new<T>(
         texture_creator: TextureCreator<T>,
+        dynamic_text: Rc<DynamicText>,
         window_width: u32,
         window_height: u32,
         dialog_width: u32,
@@ -28,6 +31,7 @@ impl Interface {
         Self {
             buy_building_screen: BuyBuildingScreen::new(
                 &texture_creator,
+                dynamic_text,
                 window_width,
                 window_height,
                 dialog_width,

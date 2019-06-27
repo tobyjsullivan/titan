@@ -11,11 +11,13 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use state::game::GameState;
 use std::ops::{Add, Sub};
+use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
+use view::text::DynamicText;
 use view::{Interface, KeyboardKey, PlayerInteraction};
 
-const TEXT_HEIGHT: u32 = 17;
+const TEXT_HEIGHT: u32 = 13;
 
 const SIDEBAR_WIDTH: u32 = 160;
 const DIALOG_WIDTH: u32 = 640;
@@ -45,10 +47,13 @@ fn main() -> Result<(), String> {
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     let texture_creator = canvas.texture_creator();
 
+    let dynamic_text = DynamicText::new(&texture_creator, TEXT_HEIGHT * scale_x);
+
     let mut event_pump = sdl_ctx.event_pump()?;
 
     let interface = Interface::new(
         texture_creator,
+        Rc::new(dynamic_text),
         drawable_x,
         drawable_y,
         DIALOG_WIDTH * scale_x,

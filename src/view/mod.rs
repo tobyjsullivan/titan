@@ -1,6 +1,7 @@
 mod interface;
 mod screens;
 mod sidebar;
+pub mod text;
 mod viewport;
 
 pub use interface::Interface;
