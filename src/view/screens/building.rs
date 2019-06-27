@@ -61,8 +61,11 @@ impl BuyBuildingScreen {
         // Debug display
         // canvas.set_draw_color(Color::RGB(255, 0, 0));
         // canvas.draw_rect(Rect::new(dialog_left, dialog_top, self.dialog_width, self.dialog_height))?;
-        self.dynamic_text
-            .print(canvas, "Hello, world!", Point::new(dialog_left + 30, dialog_top + 30))?;
+        self.dynamic_text.print(
+            canvas,
+            "Hello, world!",
+            Point::new(dialog_left + 30, dialog_top + 30),
+        )?;
 
         Ok(())
     }

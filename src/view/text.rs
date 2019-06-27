@@ -1,6 +1,8 @@
-use sdl2::image::LoadTexture;
+use sdl2::image::{LoadSurface, LoadTexture};
+use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{Canvas, RenderTarget, Texture, TextureCreator};
+use sdl2::surface::Surface;
 
 const SOURCE_TEXT_HEIGHT: u32 = 52;
 
@@ -11,13 +13,26 @@ pub struct DynamicText {
 
 impl DynamicText {
     pub fn new<T>(texture_creator: &TextureCreator<T>, text_height: u32) -> Self {
+        let mut surface: Surface = Surface::from_file("art/font_52.png").unwrap();
+        surface
+            .set_color_key(true, Color::from((0, 0, 0)))
+            .expect("failed to set color key");
+        let texture = texture_creator
+            .create_texture_from_surface(surface)
+            .expect("failed to convert surface to texture");
+
         Self {
             text_height,
-            texture: texture_creator.load_texture("art/font_52.png").unwrap(),
+            texture,
         }
     }
 
-    pub fn print<T: RenderTarget>(&self, canvas: &mut Canvas<T>, content: &str, dst: Point) -> Result<(), String> {
+    pub fn print<T: RenderTarget>(
+        &self,
+        canvas: &mut Canvas<T>,
+        content: &str,
+        dst: Point,
+    ) -> Result<(), String> {
         let text_scale = self.text_height as f32 / SOURCE_TEXT_HEIGHT as f32;
 
         let mut offset: u32 = 0;
