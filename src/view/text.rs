@@ -10,19 +10,20 @@ const SOURCE_TEXT_HEIGHT: u32 = 52;
 pub struct DynamicText {
     screen: ScreenState,
     texture: Texture,
+    inverted_texture: Texture,
 }
 
 impl DynamicText {
     pub fn new<T>(texture_creator: &TextureCreator<T>, screen: ScreenState) -> Self {
-        let mut surface: Surface = Surface::from_file("art/font_52.png").unwrap();
-        surface
-            .set_color_key(true, Color::from((0, 0, 0)))
-            .expect("failed to set color key");
-        let texture = texture_creator
-            .create_texture_from_surface(surface)
-            .expect("failed to convert surface to texture");
+        let texture = Self::load_texture(texture_creator);
+        let mut inverted_texture = Self::load_texture(texture_creator);
+        inverted_texture.set_color_mod(0, 0, 0);
 
-        Self { screen, texture }
+        Self {
+            screen,
+            texture,
+            inverted_texture,
+        }
     }
 
     pub fn print<T: RenderTarget>(
@@ -30,6 +31,7 @@ impl DynamicText {
         canvas: &mut Canvas<T>,
         content: &str,
         dst: Point,
+        invert: bool,
     ) -> Result<(), String> {
         let text_height = self.screen.scale_y(TEXT_HEIGHT as i32) as u32;
         let text_scale = text_height as f32 / SOURCE_TEXT_HEIGHT as f32;
@@ -42,10 +44,25 @@ impl DynamicText {
             let scaled_width = (width as f32 * text_scale) as u32;
             let dst = Rect::new(dst.x + offset as i32, dst.y, text_height, scaled_width);
             offset += scaled_width;
-            canvas.copy(&self.texture, src, dst)?;
+            if invert {
+                canvas.copy(&self.inverted_texture, src, dst)?;
+            } else {
+                canvas.copy(&self.texture, src, dst)?;
+            }
         }
 
         Ok(())
+    }
+
+    fn load_texture<T>(texture_creator: &TextureCreator<T>) -> Texture {
+        let mut surface: Surface = Surface::from_file("art/font_52.png").unwrap();
+        surface
+            .set_color_key(true, Color::from((0, 0, 0)))
+            .expect("failed to set color key");
+
+        texture_creator
+            .create_texture_from_surface(surface)
+            .expect("failed to convert surface to texture")
     }
 
     fn char_index(c: char) -> u32 {

@@ -71,7 +71,7 @@ impl Interface {
             selected_category,
         } = game.buy_building_screen
         {
-            self.buy_building_screen.render(canvas)?;
+            self.buy_building_screen.render(canvas, game)?;
         }
 
         canvas.present();
