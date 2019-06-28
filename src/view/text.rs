@@ -1,3 +1,4 @@
+use super::{ScreenState, TEXT_HEIGHT};
 use sdl2::image::{LoadSurface, LoadTexture};
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
@@ -7,12 +8,12 @@ use sdl2::surface::Surface;
 const SOURCE_TEXT_HEIGHT: u32 = 52;
 
 pub struct DynamicText {
-    text_height: u32,
+    screen: ScreenState,
     texture: Texture,
 }
 
 impl DynamicText {
-    pub fn new<T>(texture_creator: &TextureCreator<T>, text_height: u32) -> Self {
+    pub fn new<T>(texture_creator: &TextureCreator<T>, screen: ScreenState) -> Self {
         let mut surface: Surface = Surface::from_file("art/font_52.png").unwrap();
         surface
             .set_color_key(true, Color::from((0, 0, 0)))
@@ -21,10 +22,7 @@ impl DynamicText {
             .create_texture_from_surface(surface)
             .expect("failed to convert surface to texture");
 
-        Self {
-            text_height,
-            texture,
-        }
+        Self { screen, texture }
     }
 
     pub fn print<T: RenderTarget>(
@@ -33,15 +31,16 @@ impl DynamicText {
         content: &str,
         dst: Point,
     ) -> Result<(), String> {
-        let text_scale = self.text_height as f32 / SOURCE_TEXT_HEIGHT as f32;
+        let text_height = self.screen.scale_y(TEXT_HEIGHT as i32) as u32;
+        let text_scale = text_height as f32 / SOURCE_TEXT_HEIGHT as f32;
 
         let mut offset: u32 = 0;
         for c in content.chars() {
             let y = Self::char_index(c) * SOURCE_TEXT_HEIGHT;
-            let width = Self::char_width(c);
+            let width = Self::source_char_width(c);
             let src = Rect::new(0, y as i32, SOURCE_TEXT_HEIGHT, width);
             let scaled_width = (width as f32 * text_scale) as u32;
-            let dst = Rect::new(dst.x + offset as i32, dst.y, self.text_height, scaled_width);
+            let dst = Rect::new(dst.x + offset as i32, dst.y, text_height, scaled_width);
             offset += scaled_width;
             canvas.copy(&self.texture, src, dst)?;
         }
@@ -143,7 +142,7 @@ impl DynamicText {
         }
     }
 
-    fn char_width(c: char) -> u32 {
+    fn source_char_width(c: char) -> u32 {
         match c {
             // TODO (toby)
             _ => SOURCE_TEXT_HEIGHT,

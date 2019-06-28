@@ -8,7 +8,7 @@ use sdl2::video::Window;
 use std::f32::consts::PI;
 use std::time::Instant;
 
-use super::{COLOR_BLACK, COLOR_WHITE};
+use super::{ScreenState, COLOR_BLACK, COLOR_WHITE, SIDEBAR_WIDTH};
 
 const ISO_ANGLE_RADS: f32 = 26.22 / 180.0 * PI;
 
@@ -30,18 +30,12 @@ const COLOR_STRUCTURE_TRANSPORTATION: (u8, u8, u8) = (92, 96, 90);
 const COLOR_STRUCTURE_PLAYER: (u8, u8, u8) = (198, 42, 7);
 
 pub struct Viewport {
-    window_width: u32,
-    window_height: u32,
-    offset_left: u32,
+    screen: ScreenState,
 }
 
 impl Viewport {
-    pub fn new(width: u32, height: u32, offset_left: u32) -> Self {
-        Self {
-            window_width: width,
-            window_height: height,
-            offset_left,
-        }
+    pub fn new(screen: ScreenState) -> Self {
+        Self { screen }
     }
 
     fn compute_viewport_point(&self, game: &GameState, world_point: WorldPoint) -> ViewportPoint {
@@ -56,8 +50,9 @@ impl Viewport {
         let vertex_offset_x = screen_point.x - screen_focal_point.x;
         let vertex_offset_y = screen_point.y - screen_focal_point.y;
 
-        let viewport_center_x = self.window_width / 2;
-        let viewport_center_y = self.window_height / 2;
+        let (window_width, window_height) = self.screen.size();
+        let viewport_center_x = window_width / 2;
+        let viewport_center_y = window_height / 2;
 
         ViewportPoint {
             x: viewport_center_x as i32 + vertex_offset_x,
@@ -67,8 +62,9 @@ impl Viewport {
 
     fn compute_world_point(&self, game: &GameState, viewport_point: ViewportPoint) -> WorldPoint {
         // Take the mouse position and compute its offset from the centre of the screen.
-        let viewport_center_x = self.window_width / 2;
-        let viewport_center_y = self.window_height / 2;
+        let (window_width, window_height) = self.screen.size();
+        let viewport_center_x = window_width / 2;
+        let viewport_center_y = window_height / 2;
         let screen_offset_x = viewport_point.x - viewport_center_x as i32;
         let screen_offset_y = viewport_point.y - viewport_center_y as i32;
 
@@ -97,7 +93,7 @@ impl Viewport {
         let world_point = self.compute_world_point(
             game,
             ViewportPoint {
-                x: x - self.offset_left as i32,
+                x: x - self.offset_left() as i32,
                 y,
             },
         );
@@ -146,12 +142,13 @@ impl Viewport {
 
         // Get the bounding corners of the view port in terms of world points.
         // This will be a irregular quadralateral (possibly trapezoid?) within the game world.
+        let (window_width, window_height) = self.screen.size();
         let view_top_left_world: WorldPoint =
             self.compute_world_point(game, ViewportPoint { x: 0, y: 0 });
         let view_top_right_world: WorldPoint = self.compute_world_point(
             game,
             ViewportPoint {
-                x: self.window_width as i32,
+                x: window_width as i32,
                 y: 0,
             },
         );
@@ -159,14 +156,14 @@ impl Viewport {
             game,
             ViewportPoint {
                 x: 0,
-                y: self.window_height as i32,
+                y: window_height as i32,
             },
         );
         let view_bottom_right_world: WorldPoint = self.compute_world_point(
             game,
             ViewportPoint {
-                x: self.window_width as i32,
-                y: self.window_height as i32,
+                x: window_width as i32,
+                y: window_height as i32,
             },
         );
 
@@ -300,6 +297,10 @@ impl Viewport {
         Ok(())
     }
 
+    fn offset_left(&self) -> u32 {
+        self.screen.scale_x(SIDEBAR_WIDTH as i32) as u32
+    }
+
     fn structure_color(structure: Structure) -> Color {
         match structure {
             Structure::Forest => Color::from(COLOR_FOREST),
@@ -363,7 +364,7 @@ struct ViewportPoint {
 
 impl ViewportPoint {
     fn to_renderable(&self, viewport: &Viewport) -> rect::Point {
-        rect::Point::new(self.x + viewport.offset_left as i32, self.y)
+        rect::Point::new(self.x + viewport.offset_left() as i32, self.y)
     }
 }
 

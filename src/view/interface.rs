@@ -2,7 +2,10 @@ use super::screens::building::BuyBuildingScreen;
 use super::sidebar::Sidebar;
 use super::text::DynamicText;
 use super::viewport::Viewport;
-use super::{KeyboardKey, PlayerInteraction, COLOR_DARK_GRAY};
+use super::{
+    KeyboardKey, PlayerInteraction, ScreenState, COLOR_DARK_GRAY, DIALOG_HEIGHT, DIALOG_WIDTH,
+    TEXT_HEIGHT,
+};
 use crate::action::GameAction;
 use crate::state::game::GameState;
 use crate::state::menu::building::BuyBuildingScreenState;
@@ -13,33 +16,23 @@ use std::rc::Rc;
 pub struct Interface {
     buy_building_screen: BuyBuildingScreen,
     viewport: Viewport,
+    screen: ScreenState,
     sidebar: Sidebar,
-    sidebar_width: u32,
 }
 
 impl Interface {
-    pub fn new<T>(
-        texture_creator: TextureCreator<T>,
-        dynamic_text: Rc<DynamicText>,
-        window_width: u32,
-        window_height: u32,
-        dialog_width: u32,
-        dialog_height: u32,
-        text_height: u32,
-        sidebar_width: u32,
-    ) -> Self {
+    pub fn new<T>(texture_creator: TextureCreator<T>, screen: ScreenState) -> Self {
+        let dynamic_text = DynamicText::new(&texture_creator, screen);
+
         Self {
             buy_building_screen: BuyBuildingScreen::new(
                 &texture_creator,
-                dynamic_text,
-                window_width,
-                window_height,
-                dialog_width,
-                dialog_height,
+                Rc::new(dynamic_text),
+                screen,
             ),
-            viewport: Viewport::new(window_width - sidebar_width, window_height, sidebar_width),
-            sidebar: Sidebar::new(&texture_creator, sidebar_width, window_height, text_height),
-            sidebar_width,
+            viewport: Viewport::new(screen),
+            screen,
+            sidebar: Sidebar::new(&texture_creator, screen),
         }
     }
 
@@ -87,7 +80,8 @@ impl Interface {
     }
 
     fn window_panel(&self, x: i32, y: i32) -> WindowPanel {
-        if x <= self.sidebar_width as i32 {
+        let (sidebar_width, _) = self.sidebar.size();
+        if x <= sidebar_width as i32 {
             WindowPanel::Sidebar
         } else {
             WindowPanel::Viewport

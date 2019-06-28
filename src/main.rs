@@ -11,17 +11,9 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use state::game::GameState;
 use std::ops::{Add, Sub};
-use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
-use view::text::DynamicText;
-use view::{Interface, KeyboardKey, PlayerInteraction};
-
-const TEXT_HEIGHT: u32 = 13;
-
-const SIDEBAR_WIDTH: u32 = 160;
-const DIALOG_WIDTH: u32 = 640;
-const DIALOG_HEIGHT: u32 = 480;
+use view::{Interface, KeyboardKey, PlayerInteraction, ScreenState};
 
 const UPDATES_PER_SECOND: u32 = 120;
 const MAX_FRAMES_PER_SECOND: u32 = 60;
@@ -31,7 +23,7 @@ fn main() -> Result<(), String> {
     let vid_subsystem = sdl_ctx.video()?;
 
     let window = vid_subsystem
-        .window("Titan", 800, 600)
+        .window("Titan", 640, 480)
         .position_centered()
         .allow_highdpi()
         .fullscreen_desktop()
@@ -41,29 +33,16 @@ fn main() -> Result<(), String> {
 
     let (window_width, window_height) = window.size();
     let (drawable_x, drawable_y) = window.drawable_size();
-    let scale_x = drawable_x / window_width;
-    let scale_y = drawable_y / window_height;
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     let texture_creator = canvas.texture_creator();
 
-    let dynamic_text = DynamicText::new(&texture_creator, TEXT_HEIGHT * scale_x);
-
-    let mut event_pump = sdl_ctx.event_pump()?;
-
-    let interface = Interface::new(
-        texture_creator,
-        Rc::new(dynamic_text),
-        drawable_x,
-        drawable_y,
-        DIALOG_WIDTH * scale_x,
-        DIALOG_HEIGHT * scale_y,
-        TEXT_HEIGHT * scale_y,
-        SIDEBAR_WIDTH * scale_x,
-    );
+    let screen = ScreenState::new(window_width, window_height, drawable_x, drawable_y);
+    let interface = Interface::new(texture_creator, screen);
 
     let mut game = GameState::new();
 
+    let mut event_pump = sdl_ctx.event_pump()?;
     let update_interval = Duration::new(0, 1_000_000_000 / UPDATES_PER_SECOND);
     let mut next_update = Instant::now();
     let mut last_frame = Instant::now();
@@ -91,16 +70,16 @@ fn main() -> Result<(), String> {
                     }
                 }
                 Event::MouseMotion { x, y, .. } => {
-                    let x = x * scale_x as i32;
-                    let y = y * scale_y as i32;
+                    let x = screen.scale_x(x) as i32;
+                    let y = screen.scale_y(y) as i32;
                     let player_action = PlayerInteraction::CursorMove { x, y };
                     player_interactions.push(player_action);
                 }
                 Event::MouseButtonDown {
                     x, y, mouse_btn, ..
                 } => {
-                    let x = x * scale_x as i32;
-                    let y = y * scale_y as i32;
+                    let x = screen.scale_x(x) as i32;
+                    let y = screen.scale_y(y) as i32;
                     let player_action = match mouse_btn {
                         MouseButton::Left => Some(PlayerInteraction::WindowLeftClick { x, y }),
                         MouseButton::Right => Some(PlayerInteraction::WindowRightClick { x, y }),

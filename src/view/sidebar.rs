@@ -1,3 +1,4 @@
+use super::{ScreenState, SIDEBAR_WIDTH, TEXT_HEIGHT};
 use crate::action::GameAction;
 use crate::state::game::GameState;
 use crate::state::menu::sidebar::SidebarMenu;
@@ -14,23 +15,13 @@ const COLOR_DEPRESSED_BUTTON_BACKGROUND: (u8, u8, u8, u8) = (255, 255, 255, 100)
 const BUTTONS_PER_ROW: u32 = 5;
 
 pub struct Sidebar {
-    width: u32,
-    height: u32,
-    text_height: u32,
     button_textures: [Texture; 15],
+    screen: ScreenState,
 }
 
 impl Sidebar {
-    pub fn new<T>(
-        texture_creator: &TextureCreator<T>,
-        width: u32,
-        height: u32,
-        text_height: u32,
-    ) -> Self {
+    pub fn new<T>(texture_creator: &TextureCreator<T>, screen: ScreenState) -> Self {
         Self {
-            width,
-            height,
-            text_height,
             button_textures: [
                 texture_creator.load_texture("art/close_128.png").unwrap(),
                 texture_creator.load_texture("art/save_128.png").unwrap(),
@@ -50,6 +41,7 @@ impl Sidebar {
                 texture_creator.load_texture("art/dozer_128.png").unwrap(),
                 texture_creator.load_texture("art/point_128.png").unwrap(),
             ],
+            screen,
         }
     }
 
@@ -67,8 +59,11 @@ impl Sidebar {
     }
 
     pub fn render(&self, canvas: &mut Canvas<Window>, game: &GameState) -> Result<(), String> {
+        let (width, height) = self.size();
+        let sidebar_rect = Rect::new(0, 0, width, height);
+
         canvas.set_draw_color(Color::from(COLOR_SIDEBAR));
-        canvas.fill_rect(Rect::new(0, 0, self.width, self.height))?;
+        canvas.fill_rect(sidebar_rect)?;
 
         // Draw buttons
         self.draw_button(canvas, game, SidebarMenu::Close)?;
@@ -93,13 +88,14 @@ impl Sidebar {
     }
 
     fn button_under_cursor(&self, x: i32, y: i32) -> Option<SidebarMenu> {
-        let button_width = self.width / BUTTONS_PER_ROW;
+        let (width, _) = self.size();
+        let button_width = width / BUTTONS_PER_ROW;
         let button_height = button_width; // Square buttons
-        let button_grid_offset_y = self.text_height * 3;
+        let button_grid_offset_y = self.screen.scale_y(TEXT_HEIGHT as i32) * 3;
 
         match (
             x / button_width as i32,
-            (y - button_grid_offset_y as i32) / button_height as i32,
+            (y - button_grid_offset_y) / button_height as i32,
         ) {
             (0, 0) => Some(SidebarMenu::Close),
             (1, 0) => Some(SidebarMenu::Save),
@@ -123,18 +119,26 @@ impl Sidebar {
         }
     }
 
+    pub fn size(&self) -> (u32, u32) {
+        (
+            self.screen.scale_x(SIDEBAR_WIDTH as i32) as u32,
+            self.screen.size().1,
+        )
+    }
+
     fn draw_button(
         &self,
         canvas: &mut Canvas<Window>,
         game: &GameState,
         button: SidebarMenu,
     ) -> Result<(), String> {
-        let button_width = self.width / BUTTONS_PER_ROW;
+        let (width, _) = self.size();
+        let button_width = width / BUTTONS_PER_ROW;
         let button_height = button_width; // Square buttons
-        let button_grid_offset_y = self.text_height * 3;
+        let button_grid_offset_y = self.screen.scale_y(TEXT_HEIGHT as i32) * 3;
 
         let left = (button_column(button) * button_width) as i32;
-        let top = (button_row(button) * button_height + button_grid_offset_y) as i32;
+        let top = (button_row(button) * button_height + button_grid_offset_y as u32) as i32;
         let width = button_width;
         let height = button_height;
 
